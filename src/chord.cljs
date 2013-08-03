@@ -16,8 +16,9 @@
     (go
      (loop []
        (let [msg (<! ch)]
-         (.send ws msg))
-       (recur)))
+         (when msg
+           (.send ws msg)
+           (recur)))))
     ch))
 
 (defn make-open-ch [ws v]
