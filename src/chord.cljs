@@ -32,7 +32,7 @@
           (let [error (.-data ev)]
             (put! read-ch {:error error})))))
 
-(defn combine-chans [read-ch write-ch]
+(defn combine-chans [ws read-ch write-ch]
   (reify
     p/ReadPort
     (take! [_ handler]
@@ -45,13 +45,14 @@
     p/Channel
     (close! [_]
       (p/close! read-ch)
-      (p/close! write-ch))))
+      (p/close! write-ch)
+      (.close ws))))
 
 (defn ws-ch [ws-url]
   (let [web-socket (js/WebSocket. ws-url)
         read-ch (make-read-ch web-socket)
         write-ch (make-write-ch web-socket)
-        combined-ch (combine-chans read-ch write-ch)
+        combined-ch (combine-chans ws read-ch write-ch)
         socket-ch (make-open-ch web-socket combined-ch)]
     
     (on-error web-socket read-ch)
