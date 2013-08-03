@@ -52,7 +52,7 @@
   (let [web-socket (js/WebSocket. ws-url)
         read-ch (make-read-ch web-socket)
         write-ch (make-write-ch web-socket)
-        combined-ch (combine-chans ws read-ch write-ch)
+        combined-ch (combine-chans web-socket read-ch write-ch)
         socket-ch (make-open-ch web-socket combined-ch)]
     
     (on-error web-socket read-ch)
