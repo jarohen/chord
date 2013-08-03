@@ -23,7 +23,7 @@
 (defn make-open-ch [ws v]
   (let [ch (chan)]
     (set! (.-onopen ws)
-          (put! ch v))
+          #(put! ch v))
     ch))
 
 (defn on-error [ws read-ch]
