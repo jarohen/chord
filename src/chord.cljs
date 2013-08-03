@@ -3,7 +3,7 @@
             [cljs.core.async.impl.protocols :as p])
   (:require-macros [cljs.core.async.macros :refer (go)]))
 
-(defn make-read-ch [ws]
+(defn- make-read-ch [ws]
   (let [ch (chan)]
     (set! (.-onmessage ws)
           (fn [ev]
@@ -11,7 +11,7 @@
               (put! ch {:message message}))))
     ch))
 
-(defn make-write-ch [ws]
+(defn- make-write-ch [ws]
   (let [ch (chan)]
     (go
      (loop []
@@ -21,7 +21,7 @@
            (recur)))))
     ch))
 
-(defn make-open-ch [ws v]
+(defn- make-open-ch [ws v]
   (let [ch (chan)]
     (set! (.-onopen ws)
           #(do
@@ -29,19 +29,19 @@
              (close! ch)))
     ch))
 
-(defn on-error [ws read-ch]
+(defn- on-error [ws read-ch]
   (set! (.-onerror ws)
         (fn [ev]
           (let [error (.-data ev)]
             (put! read-ch {:error error})))))
 
-(defn on-close [ws read-ch write-ch]
+(defn- on-close [ws read-ch write-ch]
   (set! (.-onclose ws)
         (fn []
           (close! read-ch)
           (close! write-ch))))
 
-(defn combine-chans [ws read-ch write-ch]
+(defn- combine-chans [ws read-ch write-ch]
   (reify
     p/ReadPort
     (take! [_ handler]
