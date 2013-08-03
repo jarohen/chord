@@ -1,5 +1,5 @@
 (ns chord
-  (:require [cljs.core.async :refer [chan <! >! put! close]]
+  (:require [cljs.core.async :refer [chan <! >! put! close!]]
             [cljs.core.async.impl.protocols :as p])
   (:require-macros [cljs.core.async.macros :refer (go)]))
 
