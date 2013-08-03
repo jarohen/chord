@@ -35,6 +35,12 @@
           (let [error (.-data ev)]
             (put! read-ch {:error error})))))
 
+(defn on-close [ws read-ch write-ch]
+  (set! (.-onclose ws)
+        (fn []
+          (close! read-ch)
+          (close! write-ch))))
+
 (defn combine-chans [ws read-ch write-ch]
   (reify
     p/ReadPort
@@ -59,6 +65,7 @@
         socket-ch (make-open-ch web-socket combined-ch)]
     
     (on-error web-socket read-ch)
+    (on-close web-socket read-ch write-ch)
     socket-ch))
 
 
