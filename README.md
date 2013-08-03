@@ -51,6 +51,12 @@ Thanks to [Thomas Omans (eggsby)](https://github.com/eggsby) for
 (unknowingly!) providing the idea of how to combine two core.async
 channels together! https://gist.github.com/eggsby/6102537
 
+## Changes
+
+### 0.1.0
+
+Initial release.
+
 ## License
 
 Copyright © 2013 James Henderson
