@@ -7,7 +7,7 @@ between the triad of CLJ/CLJS, web-sockets and core.async.
 
 Include the following in your `project.clj`:
 
-    [jarohen/chord "0.1.1-SNAPSHOT"]
+    [jarohen/chord "0.1.1"]
 
 ### ClojureScript
 
@@ -87,6 +87,11 @@ Thanks to [Thomas Omans (eggsby)](https://github.com/eggsby) for
 channels together! https://gist.github.com/eggsby/6102537
 
 ## Changes
+
+### 0.1.1
+
+No breaking changes - added adapter around http-kit for Clojure
+support. 
 
 ### 0.1.0
 
