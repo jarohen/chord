@@ -7,7 +7,7 @@ between the triad of CLJ/CLJS, web-sockets and core.async.
 
 Include the following in your `project.clj`:
 
-    [jarohen/chord "0.1.1"]
+    [jarohen/chord "0.2.0-SNAPSHOT"]
 
 ### ClojureScript
 
@@ -87,6 +87,11 @@ Thanks to [Thomas Omans (eggsby)](https://github.com/eggsby) for
 channels together! https://gist.github.com/eggsby/6102537
 
 ## Changes
+
+### 0.2.0-SNAPSHOT
+
+Breaking change - CLJS namespace now `chord.client` due to recent
+versions of the CLJS compiler not liking single-segment namespaces
 
 ### 0.1.1
 
