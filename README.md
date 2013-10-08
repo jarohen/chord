@@ -7,7 +7,7 @@ between the triad of CLJ/CLJS, web-sockets and core.async.
 
 Include the following in your `project.clj`:
 
-    [jarohen/chord "0.2.0-SNAPSHOT"]
+    [jarohen/chord "0.2.0
 
 ### Example project
 
