@@ -7,7 +7,7 @@ between the triad of CLJ/CLJS, web-sockets and core.async.
 
 Include the following in your `project.clj`:
 
-    [jarohen/chord "0.2.0
+    [jarohen/chord "0.2.0"]
 
 ### Example project
 
@@ -100,7 +100,7 @@ channels together! https://gist.github.com/eggsby/6102537
 
 ## Changes
 
-### 0.2.0-SNAPSHOT
+### 0.2.0
 
 Breaking change - CLJS namespace now `chord.client` due to recent
 versions of the CLJS compiler not liking single-segment namespaces
