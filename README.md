@@ -11,13 +11,13 @@ Include the following in your `project.clj`:
 
 ### ClojureScript
 
-**Chord** only has one function, `chord/ws-ch`, which takes a
+**Chord** only has one function, `chord.client/ws-ch`, which takes a
 web-socket URL and returns a channel. When the connection opens
 successfully, this channel then returns a two-way channel that you can
 use to communicate with the web-socket server:
 
 ```clojure
-(:require [chord :refer [ws-ch]]
+(:require [chord.client :refer [ws-ch]]
           [cljs.core.async :refer [<! >! put! close!]])
 (:require-macros [cljs.core.async.macros :refer [go]])
 
