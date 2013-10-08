@@ -23,7 +23,7 @@
     (if (seq msgs)
       (for [msg msgs]
         [:li (pr-str msg)])
-      [:li "None"])]))
+      [:li "None yet."])]))
 
 (defn list-binder [msgs]
   (fn [$list]
@@ -58,7 +58,8 @@
            (bind-msgs ws msgs)
            (d/replace-contents! (sel1 :#content)
                                 (render-page (input-binder ws)
-                                             (list-binder msgs)))))))
+                                             (list-binder msgs)))
+           (reset! msgs [])))))
 
 
 
