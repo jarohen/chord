@@ -1,4 +1,4 @@
-(defproject jarohen/chord "0.1.2-SNAPSHOT"
+(defproject jarohen/chord "0.2.0-SNAPSHOT"
   :description "A library to bridge the gap between CLJ/CLJS, web-sockets and core.async"
   :url "https://github.com/james-henderson/chord.git"
   :license {:name "Eclipse Public License"
