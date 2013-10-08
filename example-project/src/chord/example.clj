@@ -16,11 +16,11 @@
 (defn ws-handler [req]
   (with-channel req ws
     (go
-     (let [{:keys [message]} (<! ws)]
-       (println "Message received:" message)
-       (>! ws (format "You said: '%s'" message))
-       (Thread/sleep 500)
-       (close! ws)))))
+     (loop []
+       (when-let [{:keys [message]} (<! ws)]
+         (println "Message received:" message)
+         (>! ws (format "You said: '%s' at %s." message (java.util.Date.)))
+         (recur))))))
 
 (defroutes app
   (GET "/" [] (response (page-frame)))

@@ -11,7 +11,9 @@
                  [hiccup "1.0.4"]
 
                  [org.clojure/clojurescript "0.0-1913"]
-                 [org.clojure/tools.reader "0.7.8"]]
+                 [org.clojure/tools.reader "0.7.8"]
+
+                 [prismatic/dommy "0.1.2"]]
 
   :plugins [[lein-pdo "0.1.1"]
             [jarohen/lein-frodo "0.2.0"]
