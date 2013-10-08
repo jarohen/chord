@@ -10,7 +10,7 @@
                  [compojure "1.1.5"]
                  [hiccup "1.0.4"]
 
-                 [org.clojure/clojurescript "0.0-1913"]]
+                 [org.clojure/clojurescript "0.0-1896"]]
 
   :plugins [[lein-pdo "0.1.1"]
             [jarohen/lein-frodo "0.2.0"]
