@@ -20,6 +20,8 @@
 
   :aliases {"dev" ["pdo" "cljsbuild" "auto," "frodo"]}
 
+  :resource-paths ["resources" "target/resources"]
+
   :cljsbuild {:builds [{:source-paths ["src"]
                         :compiler {:output-to "target/resources/js/chord-example.js"
                                    :optimizations :whitespace
