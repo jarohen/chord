@@ -11,7 +11,7 @@
    [:head
     [:title "Chord Example"]
     (include-js "/js/chord-example.js")]
-   [:body [:div "Hello World!"]]))
+   [:body [:div#content]]))
 
 (defn ws-handler [req]
   (with-channel req ws

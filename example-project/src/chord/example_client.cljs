@@ -6,7 +6,9 @@
 (go
  (let [ws (<! (ws-ch "ws://localhost:3000/ws"))]
    (>! ws "Hello server from client!")
-   (js/console.log (pr-str (<! ws)))))
+   (set! (.-innerHTML (js/document.getElementById "content"))
+         (str "Message received: "
+              (pr-str (<! ws))))))
 
 
 
