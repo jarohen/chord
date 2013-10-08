@@ -93,6 +93,9 @@ channels together! https://gist.github.com/eggsby/6102537
 Breaking change - CLJS namespace now `chord.client` due to recent
 versions of the CLJS compiler not liking single-segment namespaces
 
+Thanks to [Joshua Griffith (hadronzoo)](https://github.com/hadronzoo)
+for the PR!
+
 ### 0.1.1
 
 No breaking changes - added adapter around http-kit for Clojure
