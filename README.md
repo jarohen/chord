@@ -9,6 +9,18 @@ Include the following in your `project.clj`:
 
     [jarohen/chord "0.2.0-SNAPSHOT"]
 
+### Example project
+
+There is an simple example server/client project under the
+`example-project` directory. The client sends a websocket message to
+the server, that gets echoed back to the client and written to the JS
+console.
+
+You can run it with `lein dev` - an alias that starts up an http-kit
+server using [frodo][1] and automatically re-compiles the CLJS.
+
+[1]: https://github.com/james-henderson/lein-frodo
+
 ### ClojureScript
 
 **Chord** only has one function, `chord.client/ws-ch`, which takes a
