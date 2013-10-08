@@ -13,8 +13,8 @@ Include the following in your `project.clj`:
 
 There is an simple example server/client project under the
 `example-project` directory. The client sends a websocket message to
-the server, that gets echoed back to the client and written to the JS
-console.
+the server, that gets echoed back to the client and written on the
+page.
 
 You can run it with `lein dev` - an alias that starts up an http-kit
 server using [frodo][1] and automatically re-compiles the CLJS.
