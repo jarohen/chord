@@ -1,18 +1,28 @@
 (ns chord.client
-  (:require [cljs.core.async :refer [chan <! >! put! close!]]
+  (:require [cljs.core.async :refer [chan <! >! put! close! sliding-buffer dropping-buffer]]
             [cljs.core.async.impl.protocols :as p])
   (:require-macros [cljs.core.async.macros :refer (go)]))
 
-(defn- make-read-ch [ws]
-  (let [ch (chan)]
+(def MAX-QUEUE-SIZE cljs.core.async.impl/MAX-QUEUE-SIZE)
+(defn- make-channel [{:keys [type size]
+                      :or {type :unbuffered
+                           size MAX-QUEUE-SIZE}}]
+  (condp = type
+    :unbuffered (chan size)
+    :sliding (chan (sliding-buffer size))
+    :dropping (chan (dropping-buffer size)))
+    nil (chan))
+
+(defn- make-read-ch [ws opts]
+  (let [ch (make-channel opts)]
     (set! (.-onmessage ws)
           (fn [ev]
             (let [message (.-data ev)]
               (put! ch {:message message}))))
     ch))
 
-(defn- make-write-ch [ws]
-  (let [ch (chan)]
+(defn- make-write-ch [ws opts]
+  (let [ch (make-channel opts)]
     (go
      (loop []
        (let [msg (<! ch)]
@@ -22,7 +32,7 @@
     ch))
 
 (defn- make-open-ch [ws v]
-  (let [ch (chan)]
+  (let [ch (make-channel nil)]
     (set! (.-onopen ws)
           #(do
              (put! ch v)
@@ -57,13 +67,31 @@
       (p/close! write-ch)
       (.close ws))))
 
-(defn ws-ch [ws-url]
+(defn ws-ch
+  "Creates websockets connection and returns 2-sided channel.
+   Arguments:
+    ws-url           - (required) link to websocket service
+    :reading-buffer  - (optional) hash-map with settings for reading channel
+    :writing-buffer  - (optional) hash-map with settings for writing channel
+
+    supported keys for channel's options:
+
+    * type - type of channel's buffer [:unbuffered :sliding :dropping]
+    * size - size of buffer, default core.async.impl/MAX-QUEUE-SIZE
+
+   Usage:
+    (ws-ch \"ws://127.0.0.1:6437\")
+    (ws-ch \"ws://127.0.0.1:6437\" :reading-buffer {:type :sliding})
+    (ws-ch \"ws://127.0.0.1:6437\" :reading-buffer {:type :sliding}
+                                   :writing-buffer {:type :dropping :size 10})
+  "
+  [ws-url & {:keys [reading-buffer writing-buffer]}]
   (let [web-socket (js/WebSocket. ws-url)
-        read-ch (make-read-ch web-socket)
-        write-ch (make-write-ch web-socket)
+        read-ch (make-read-ch web-socket reading-buffer)
+        write-ch (make-write-ch web-socket writing-buffer)
         combined-ch (combine-chs web-socket read-ch write-ch)
         socket-ch (make-open-ch web-socket combined-ch)]
-    
+
     (on-error web-socket read-ch)
     (on-close web-socket read-ch write-ch)
     socket-ch))
