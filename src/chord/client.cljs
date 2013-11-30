@@ -3,16 +3,13 @@
             [cljs.core.async.impl.protocols :as p])
   (:require-macros [cljs.core.async.macros :refer (go)]))
 
-(def MAX-QUEUE-SIZE cljs.core.async.impl/MAX-QUEUE-SIZE)
-
 (defn- make-channel [{:keys [type size]
-                      :or {type :unbuffered
-                           size MAX-QUEUE-SIZE}}]
+                      :or {type :unbuffered}}]
   (case type
-    :unbuffered (chan size)
+    :fixed (chan size)
     :sliding (chan (sliding-buffer size))
-    :dropping (chan (dropping-buffer size)))
-    nil (chan))
+    :dropping (chan (dropping-buffer size))
+    :unbuffered (chan)))
 
 (defn- make-read-ch [ws opts]
   (let [ch (make-channel opts)]
@@ -77,7 +74,7 @@
 
     supported keys for channel's options:
 
-    * type - type of channel's buffer [:unbuffered :sliding :dropping]
+    * type - type of channel's buffer [:fixed :sliding :dropping :unbuffered]
     * size - size of buffer, default core.async.impl/MAX-QUEUE-SIZE
 
    Usage:
