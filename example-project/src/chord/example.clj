@@ -3,7 +3,7 @@
             [compojure.core :refer [defroutes GET]]
             [compojure.route :refer [resources]]
             [chord.http-kit :refer [with-channel]]
-            [clojure.core.async :refer [<! >! put! close! go]]
+            [clojure.core.async :refer [<! >! put! close! go-loop]]
             [hiccup.page :refer [html5 include-js]]))
 
 (defn page-frame []
@@ -15,14 +15,17 @@
 
 (defn ws-handler [req]
   (with-channel req ws
-    (go
-     (loop []
-       (when-let [{:keys [message]} (<! ws)]
-         (println "Message received:" message)
-         (>! ws (format "You said: '%s' at %s." message (java.util.Date.)))
-         (recur))))))
+    (println "Opened connection from" (:remote-addr req))
+    (go-loop []
+      (when-let [{:keys [message]} (<! ws)]
+        (println "Message received:" message)
+        (>! ws (format "You said: '%s' at %s." message (java.util.Date.)))
+        (recur)))))
 
-(defroutes app
+(defroutes app-routes
   (GET "/" [] (response (page-frame)))
   (GET "/ws" [] ws-handler)
   (resources "/js" {:root "js"}))
+
+(def app
+  #'app-routes)
