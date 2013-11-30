@@ -74,13 +74,15 @@
 
     supported keys for channel's options:
 
-    * type - type of channel's buffer [:fixed :sliding :dropping :unbuffered]
-    * size - size of buffer, default core.async.impl/MAX-QUEUE-SIZE
+    * type - type of channel's buffer [:fixed :sliding :dropping :unbuffered] (default :unbuffered)
+    * size - size of buffer (required for [:fixed :sliding :dropping])
 
    Usage:
     (ws-ch \"ws://127.0.0.1:6437\")
-    (ws-ch \"ws://127.0.0.1:6437\" {:reading-buffer {:type :sliding}})
-    (ws-ch \"ws://127.0.0.1:6437\" {:reading-buffer {:type :sliding}
+
+    (ws-ch \"ws://127.0.0.1:6437\" {:reading-buffer {:type :sliding :size 10}})
+
+    (ws-ch \"ws://127.0.0.1:6437\" {:reading-buffer {:type :sliding :size 10}
                                     :writing-buffer {:type :dropping :size 10}})"
   
   [ws-url & [{:keys [reading-buffer writing-buffer]}]]
