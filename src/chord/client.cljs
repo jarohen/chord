@@ -84,9 +84,10 @@
     (ws-ch \"ws://127.0.0.1:6437\")
     (ws-ch \"ws://127.0.0.1:6437\" {:reading-buffer {:type :sliding}})
     (ws-ch \"ws://127.0.0.1:6437\" {:reading-buffer {:type :sliding}
-                                    :writing-buffer {:type :dropping :size 10}})
-  "
+                                    :writing-buffer {:type :dropping :size 10}})"
+  
   [ws-url & [{:keys [reading-buffer writing-buffer]}]]
+  
   (let [web-socket (js/WebSocket. ws-url)
         read-ch (make-read-ch web-socket reading-buffer)
         write-ch (make-write-ch web-socket writing-buffer)
@@ -96,5 +97,3 @@
     (on-error web-socket read-ch)
     (on-close web-socket read-ch write-ch)
     socket-ch))
-
-
