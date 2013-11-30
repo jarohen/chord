@@ -1,36 +1,23 @@
 (ns chord.client
-  (:require [cljs.core.async :refer [chan <! >! put! close! sliding-buffer dropping-buffer]]
+  (:require [cljs.core.async :refer [chan <! >! put! close!]]
             [cljs.core.async.impl.protocols :as p])
-  (:require-macros [cljs.core.async.macros :refer (go)]))
+  (:require-macros [cljs.core.async.macros :refer [go-loop]]))
 
-(defn- make-channel [{:keys [type size]
-                      :or {type :unbuffered}}]
-  (case type
-    :fixed (chan size)
-    :sliding (chan (sliding-buffer size))
-    :dropping (chan (dropping-buffer size))
-    :unbuffered (chan)))
+(defn- read-from-ch! [ch ws]
+  (set! (.-onmessage ws)
+        (fn [ev]
+          (let [message (.-data ev)]
+            (put! ch {:message message})))))
 
-(defn- make-read-ch [ws opts]
-  (let [ch (make-channel opts)]
-    (set! (.-onmessage ws)
-          (fn [ev]
-            (let [message (.-data ev)]
-              (put! ch {:message message}))))
-    ch))
-
-(defn- make-write-ch [ws opts]
-  (let [ch (make-channel opts)]
-    (go
-     (loop []
-       (let [msg (<! ch)]
-         (when msg
-           (.send ws msg)
-           (recur)))))
-    ch))
+(defn- write-to-ch! [ch ws]
+  (go-loop []
+    (let [msg (<! ch)]
+      (when msg
+        (.send ws msg)
+        (recur)))))
 
 (defn- make-open-ch [ws v]
-  (let [ch (make-channel nil)]
+  (let [ch (chan)]
     (set! (.-onopen ws)
           #(do
              (put! ch v)
@@ -66,7 +53,7 @@
       (.close ws))))
 
 (defn ws-ch
-  "Creates websockets connection and returns 2-sided channel.
+  "Creates websockets connection and returns a 2-sided channel when the websocket is opened.
    Arguments:
     ws-url           - (required) link to websocket service
     :reading-buffer  - (optional) hash-map with settings for reading channel
@@ -78,18 +65,23 @@
     * size - size of buffer (required for [:fixed :sliding :dropping])
 
    Usage:
-    (ws-ch \"ws://127.0.0.1:6437\")
+    (:require [cljs.core.async :as a])
 
-    (ws-ch \"ws://127.0.0.1:6437\" {:reading-buffer {:type :sliding :size 10}})
 
-    (ws-ch \"ws://127.0.0.1:6437\" {:reading-buffer {:type :sliding :size 10}
-                                    :writing-buffer {:type :dropping :size 10}})"
+    (a/<! (ws-ch \"ws://127.0.0.1:6437\"))
+
+    (a/<! (ws-ch \"ws://127.0.0.1:6437\" {:read-ch (a/chan (a/sliding-buffer 10))}))
+
+    (a/<! (ws-ch \"ws://127.0.0.1:6437\" {:read-ch (a/chan (a/sliding-buffer 10))
+                                          :write-ch (a/chan (a/dropping-buffer 10))}))"
   
-  [ws-url & [{:keys [reading-buffer writing-buffer]}]]
+  [ws-url & [{:keys [read-ch write-ch]}]]
   
   (let [web-socket (js/WebSocket. ws-url)
-        read-ch (make-read-ch web-socket reading-buffer)
-        write-ch (make-write-ch web-socket writing-buffer)
+        read-ch (doto (or read-ch (chan))
+                  (read-from-ch! web-socket))
+        write-ch (doto (or write-ch (chan))
+                  (write-to-ch! web-socket))
         combined-ch (combine-chs web-socket read-ch write-ch)
         socket-ch (make-open-ch web-socket combined-ch)]
 
