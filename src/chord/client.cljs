@@ -4,10 +4,11 @@
   (:require-macros [cljs.core.async.macros :refer (go)]))
 
 (def MAX-QUEUE-SIZE cljs.core.async.impl/MAX-QUEUE-SIZE)
+
 (defn- make-channel [{:keys [type size]
                       :or {type :unbuffered
                            size MAX-QUEUE-SIZE}}]
-  (condp = type
+  (case type
     :unbuffered (chan size)
     :sliding (chan (sliding-buffer size))
     :dropping (chan (dropping-buffer size)))
