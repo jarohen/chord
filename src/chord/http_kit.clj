@@ -1,6 +1,6 @@
 (ns chord.http-kit
   (:require [org.httpkit.server :as http]
-            [clojure.core.async :refer [chan <! >! put! close! go]]
+            [clojure.core.async :refer [chan <! >! put! close! go-loop]]
             [clojure.core.async.impl.protocols :as p]))
 
 (defn- make-read-ch [ws]
@@ -57,13 +57,12 @@
 (comment
   (defn handler [req]
     (with-channel req ch
-      (go
-       (loop []
-         (if-let [{:keys [message]} (<! ch)]
-           (do
-             (prn {:message message})
-             (>! ch (str "You said: " message))
-             (recur))
-           (prn "closed."))))))
+      (go-loop []
+        (if-let [{:keys [message]} (<! ch)]
+          (do
+            (prn {:message message})
+            (>! ch (str "You said: " message))
+            (recur))
+          (prn "closed.")))))
 
   (defonce server (http/run-server #'handler {:port 3000})))
