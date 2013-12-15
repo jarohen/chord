@@ -1,4 +1,5 @@
 {:frodo/config {:web {:port 3000
                       :handler chord.example/app
-                      :cljs-repl? true}
-                :nrepl {:port 7888}}}
+                      }
+                :nrepl {:port 7888 
+                        :cljs-repl? true}}}
