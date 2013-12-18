@@ -82,15 +82,32 @@
        (let [~ch-name (core-async-ch httpkit-ch# ~opts)]
          ~@body))))
 
-(comment
-  (defn handler [req]
-    (with-channel req ch
-      (go-loop []
-        (if-let [{:keys [message]} (<! ch)]
-          (do
-            (prn {:message message})
-            (>! ch (str "You said: " message))
-            (recur))
-          (prn "closed.")))))
+(defn wrap-websocket-handler
+  "Middleware that puts a :ws-channel key on the request map for
+   websocket requests.
 
-  (defonce server (http/run-server #'handler {:port 3000})))
+   Arguments:
+    handler - (required) Ring-compatible handler
+    opts    - (optional) Options for the WebSocket channel - same options as for `with-channel`"
+  [handler & [opts]]
+  
+  (fn [req]
+    (if (:websocket? req)
+      (with-channel req ws-conn
+        (or opts {})
+        (handler (assoc req :ws-channel ws-conn)))
+      (handler req))))
+
+(comment
+  (defn handler [{:keys [ws-channel] :as req}]
+    (go-loop []
+      (if-let [{:keys [message]} (<! ws-channel)]
+        (do
+          (prn {:message message})
+          (>! ws-channel (str "You said: " message))
+          (recur))
+        (prn "closed."))))
+
+  (server)
+
+  (def server (http/run-server (-> #'handler wrap-websocket-handler) {:port 3000})))

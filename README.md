@@ -7,7 +7,7 @@ between the triad of CLJ/CLJS, web-sockets and core.async.
 
 Include the following in your `project.clj`:
 
-    [jarohen/chord "0.2.1"]
+    [jarohen/chord "0.2.2"]
 
 ### Example project
 
@@ -113,6 +113,31 @@ This can take custom buffered read/write channels as well:
         (close! ws-ch)))))
 ```
 
+You can also use the `wrap-websocket-handler` middleware, which will
+put a `:ws-channel` key in the request map:
+
+```clojure
+(require '[chord.http-kit :refer [wrap-websocket-handler]]
+         '[clojure.core.async :as a])
+
+(defn your-handler [{:keys [ws-channel] :as req}]
+  (go
+    (let [{:keys [message]} (<! ws-channel)]
+      (println "Message received:" message)
+      (>! ws-channel "Hello client from server!")
+      (close! ws-channel))))
+
+(start-server (-> #'your-handler wrap-websocket-handler) {:port 3000})
+```
+
+You can pass custom channels to `wrap-websocket-handler` as a second
+(optional) parameter:
+
+```clojure
+(start-server (-> #'your-handler
+                  (wrap-websocket-handler {:read-ch ...}))
+	          {:port 3000})
+```
 
 ## Bug reports/pull requests/comments/suggestions etc?
 
@@ -125,6 +150,14 @@ Thanks to [Thomas Omans (eggsby)](https://github.com/eggsby) for
 channels together! https://gist.github.com/eggsby/6102537
 
 ## Changes
+
+### 0.2.2
+
+No breaking changes. Adding in `wrap-websocket-handler` to provide an
+macro-less alternative to `with-channel`.
+
+Thanks to [Malcolm Sparks](https://github.com/malcolmsparks) for the
+tip!
 
 ### 0.2.1
 
