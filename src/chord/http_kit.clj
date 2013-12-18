@@ -82,10 +82,19 @@
        (let [~ch-name (core-async-ch httpkit-ch# ~opts)]
          ~@body))))
 
-(defn wrap-websocket-handler [handler]
+(defn wrap-websocket-handler
+  "Middleware that puts a :ws-channel key on the request map for
+   websocket requests.
+
+   Arguments:
+    handler - (required) Ring-compatible handler
+    opts    - (optional) Options for the WebSocket channel - same options as for `with-channel`"
+  [handler & [opts]]
+  
   (fn [req]
     (if (:websocket? req)
       (with-channel req ws-conn
+        (or opts {})
         (handler (assoc req :ws-channel ws-conn)))
       (handler req))))
 
