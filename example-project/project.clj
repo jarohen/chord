@@ -4,7 +4,7 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.5.1"]
-                 [jarohen/chord "0.2.1"]
+                 [jarohen/chord "0.3.0"]
 
                  [ring/ring-core "1.2.0"]
                  [compojure "1.1.5"]
@@ -25,7 +25,7 @@
 
   :resource-paths ["resources" "target/resources"]
 
-  :cljsbuild {:builds [{:source-paths ["src"]
+  :cljsbuild {:builds [{:source-paths ["src" "../src/"]
                         :compiler {:output-to "target/resources/js/chord-example.js"
                                    :optimizations :whitespace
                                    :pretty-print true}}]})

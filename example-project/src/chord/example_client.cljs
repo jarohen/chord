@@ -1,7 +1,8 @@
 (ns chord.example-client
   (:require [chord.client :refer [ws-ch]]
             [cljs.core.async :refer [<! >! put! close! timeout]]
-            [dommy.core :as d])
+            [dommy.core :as d]
+            [cljs.reader :as edn])
   (:require-macros [cljs.core.async.macros :refer [go]]
                    [dommy.macros :refer [node sel1]]))
 
@@ -34,12 +35,20 @@
                       (render-list)
                       (d/replace-contents! $list))))))
 
+(defn try-read-edn [s]
+  (try
+    (let [edn (edn/read-string s)]
+      (if (symbol? edn)
+        s
+        edn))
+    (catch js/Error _ s)))
+
 (defn input-binder [ch]
   (fn [$input]
     (d/listen! $input :keyup
                (fn [e]
                  (when (= 13 (.-keyCode e))
-                   (put! ch (d/value $input))
+                   (put! ch (try-read-edn (d/value $input)))
                    (d/set-value! $input ""))))
     (go (<! (timeout 200)) (.focus $input))))
 

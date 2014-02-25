@@ -1,0 +1,48 @@
+* Changes
+
+** 0.3.0
+
+Breaking change: defaulting to expecting EDN messages over the
+channel.
+
+This shouldn't impact users who use Chord on both the client and the
+server (the message over the wire will be ="msg"= rather than =msg=,
+but will be automatically parsed back to a string before the user sees
+it).
+
+It will impact users who only use Chord on one end - make sure that
+you pass ={:format :str}= to continue with the same behaviour as
+0.2.2.
+
+Thanks to [[https://github.com/eneroth][Henrik Eneroth]] for the discussion!
+
+** 0.2.2
+
+No breaking changes. Adding in =wrap-websocket-handler= to provide an
+macro-less alternative to =with-channel=.
+
+Thanks to [[https://github.com/malcolmsparks][Malcolm Sparks]] for the tip!
+
+** 0.2.1
+
+No breaking changes. Added ability to pass custom buffered channels to
+use instead of the default unbuffered channels.
+
+Thanks to [[https://github.com/timgluz][Timo Sulg (timgluz)]] for the PR!
+
+** 0.2.0
+
+Breaking change - CLJS namespace now =chord.client= due to recent
+versions of the CLJS compiler not liking single-segment namespaces
+
+Thanks to [[https://github.com/hadronzoo][Joshua Griffith (hadronzoo)]] for the PR!
+
+** 0.1.1
+
+No breaking changes - added adapter around http-kit for Clojure
+support. 
+
+** 0.1.0
+
+Initial release.
+

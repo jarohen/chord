@@ -17,9 +17,11 @@
   (with-channel req ws
     (println "Opened connection from" (:remote-addr req))
     (go-loop []
-      (when-let [{:keys [message]} (<! ws)]
-        (println "Message received:" message)
-        (>! ws (format "You said: '%s' at %s." message (java.util.Date.)))
+      (when-let [{:keys [message error] :as msg} (<! ws)]
+        (prn "Message received:" msg)
+        (>! ws (if error
+                 (format "Error: '%s'." (pr-str msg))
+                 (format "You passed: '%s' at %s." (pr-str message) (java.util.Date.))))
         (recur)))))
 
 (defroutes app-routes
