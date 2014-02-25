@@ -1,6 +1,7 @@
 (ns chord.client
-  (:require [cljs.core.async :refer [chan <! >! put! close!]]
-            [cljs.core.async.impl.protocols :as p])
+  (:require [cljs.core.async :as a :refer [chan <! >! put! close!]]
+            [cljs.core.async.impl.protocols :as p]
+            [cljs.reader :as edn])
   (:require-macros [cljs.core.async.macros :refer [go-loop]]))
 
 (defn- read-from-ch! [ch ws]
@@ -52,17 +53,34 @@
       (p/close! write-ch)
       (.close ws))))
 
+(defmulti wrap-format
+  (fn [chs format] format))
+
+(defn try-read-edn [{:keys [message]}]
+  (try
+    {:message (edn/read-string message)}
+    (catch js/Error e
+      {:error :invalid-edn
+       :invalid-msg message})))
+
+(defmethod wrap-format :edn [{:keys [read-ch write-ch]} _]
+  {:read-ch (a/map< try-read-edn read-ch)
+   :write-ch (a/map> pr-str write-ch)})
+
+(defmethod wrap-format :str [chs _]
+  chs)
+
+(defmethod wrap-format nil [chs _]
+  (wrap-format chs :edn))
+
 (defn ws-ch
   "Creates websockets connection and returns a 2-sided channel when the websocket is opened.
    Arguments:
     ws-url           - (required) link to websocket service
-    :reading-buffer  - (optional) hash-map with settings for reading channel
-    :writing-buffer  - (optional) hash-map with settings for writing channel
-
-    supported keys for channel's options:
-
-    * type - type of channel's buffer [:fixed :sliding :dropping :unbuffered] (default :unbuffered)
-    * size - size of buffer (required for [:fixed :sliding :dropping])
+    opts             - (optional) map to configure reading/writing channels
+      :read-ch       - (optional) (possibly buffered) channel to use for reading the websocket
+      :write-ch      - (optional) (possibly buffered) channel to use for writing to the websocket
+      :format        - (optional, default :edn) data format to use on the channel, (at the moment) either :edn or :str.
 
    Usage:
     (:require [cljs.core.async :as a])
@@ -75,16 +93,17 @@
     (a/<! (ws-ch \"ws://127.0.0.1:6437\" {:read-ch (a/chan (a/sliding-buffer 10))
                                           :write-ch (a/chan (a/dropping-buffer 10))}))"
   
-  [ws-url & [{:keys [read-ch write-ch]}]]
+  [ws-url & [{:keys [read-ch write-ch format]}]]
   
   (let [web-socket (js/WebSocket. ws-url)
-        read-ch (doto (or read-ch (chan))
-                  (read-from-ch! web-socket))
-        write-ch (doto (or write-ch (chan))
-                  (write-to-ch! web-socket))
-        combined-ch (combine-chs web-socket read-ch write-ch)
-        socket-ch (make-open-ch web-socket combined-ch)]
+        {:keys [read-ch write-ch]} (-> {:read-ch (or read-ch (chan))
+                                        :write-ch (or write-ch (chan))}
+                                       (wrap-format format))]
 
+    (read-from-ch! read-ch web-socket)
+    (write-to-ch! write-ch web-socket)
     (on-error web-socket read-ch)
     (on-close web-socket read-ch write-ch)
-    socket-ch))
+    
+    (->> (combine-chs web-socket read-ch write-ch)
+         (make-open-ch web-socket))))

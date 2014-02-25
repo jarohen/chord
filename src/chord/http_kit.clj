@@ -1,7 +1,9 @@
 (ns chord.http-kit
   (:require [org.httpkit.server :as http]
-            [clojure.core.async :refer [chan <! >! put! close! go-loop]]
-            [clojure.core.async.impl.protocols :as p]))
+            [clojure.core.async :as a :refer [chan <! >! put! close! go-loop]]
+            [clojure.core.async.impl.protocols :as p]
+            [clojure.tools.reader.edn :as edn]
+            [clojure.set :refer [rename-keys]]))
 
 (defn- read-from-ch! [ch ws]
   (http/on-receive ws #(put! ch {:message %})))
@@ -36,15 +38,36 @@
       (p/close! write-ch)
       (http/close ws))))
 
-(defn core-async-ch [httpkit-ch {:keys [read-ch write-ch]}]
-  (let [read-ch (doto (or read-ch (chan))
-                  (read-from-ch! httpkit-ch))
-        write-ch (doto (or write-ch (chan))
-                  (write-to-ch! httpkit-ch))
-        combined-ch (combine-chs httpkit-ch read-ch write-ch)]
-     
+(defmulti wrap-format
+  (fn [chs format] format))
+
+(defn try-read-edn [{:keys [message]}]
+  (try
+    {:message (edn/read-string message)}
+    (catch Exception e
+      {:error :invalid-edn
+       :invalid-msg message})))
+
+(defmethod wrap-format :edn [{:keys [read-ch write-ch]} _]
+  {:read-ch (a/map< try-read-edn read-ch)
+   :write-ch (a/map> pr-str write-ch)})
+
+(defmethod wrap-format :str [chs _]
+  chs)
+
+(defmethod wrap-format nil [chs _]
+  (wrap-format chs :edn))
+
+(defn core-async-ch [httpkit-ch {:keys [read-ch write-ch format]}]
+  (let [{:keys [read-ch write-ch]} (-> {:read-ch (or read-ch (chan))
+                                        :write-ch (or write-ch (chan))}
+                                       (wrap-format format))]
+
+    (read-from-ch! read-ch httpkit-ch)
+    (write-to-ch! write-ch httpkit-ch)
     (on-close httpkit-ch read-ch write-ch)
-    combined-ch))
+    
+    (combine-chs httpkit-ch read-ch write-ch)))
 
 (defmacro with-channel
   "Extracts the websocket from the request and binds it to 'ch-name' in the body
@@ -54,6 +77,7 @@
     opts        - (optional) map to configure reading/writing channels
       :read-ch  - (optional) (possibly buffered) channel to use for reading the websocket
       :write-ch - (optional) (possibly buffered) channel to use for writing to the websocket
+      :format   - (optional, default :edn) data format to use on the channel, (at the moment) either :edn or :str.
 
    Usage:
     (require '[clojure.core.async :as a])
