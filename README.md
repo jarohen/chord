@@ -7,7 +7,7 @@ between the triad of CLJ/CLJS, web-sockets and core.async.
 
 Include the following in your `project.clj`:
 
-    [jarohen/chord "0.2.2"]
+    [jarohen/chord "0.3.0"]
 
 ### Example project
 
@@ -44,7 +44,7 @@ Messages that come from the server are received as a map with a
 ```clojure
 (go
   (let [ws (<! (ws-ch "ws://localhost:3000/ws"))]
-    (js/console.log "Got message from server:" (:message (<! ws)))))
+    (js/console.log "Got message from server:" (pr-str (:message (<! ws))))))
 ```
 		
 Errors in the web-socket channel are returned as a map with an
@@ -56,9 +56,19 @@ Errors in the web-socket channel are returned as a map with an
         {:keys [message error]} (<! ws)]
     (if error
       (js/console.log "Uh oh:" error)
-	  (js/console.log "Hooray! Message:" message))))
+	  (js/console.log "Hooray! Message:" (pr-str message)))))
 ```
-		  
+
+As of 0.3.0, you can pass a `:format` option, to pass messages over
+the channel as EDN (default), or as raw strings:
+
+```clojure
+(:require [cljs.core.async :as a])
+(ws-ch "ws://localhost:3000/ws"
+       {:format :str}) ; {:format :edn} is default
+```		
+
+
 As of 0.2.1, you can configure the buffering of the channel by
 (optionally) passing custom read/write channels, as follows:
 
@@ -93,22 +103,24 @@ Chord's `with-channel` is used as follows:
   (with-channel req ws-ch
     (go
       (let [{:keys [message]} (<! ws-ch)]
-        (println "Message received:" message)
+        (prn "Message received:" message)
         (>! ws-ch "Hello client from server!")
         (close! ws-ch)))))
 ```
 
-This can take custom buffered read/write channels as well:
+This can take a `:format` option, and custom buffered read/write
+channels as well:
 
 ```clojure
 (require '[clojure.core.async :as a])
 
 (defn your-handler [req]
   (with-channel req ws-ch
-    {:read-ch (a/chan (a/dropping-buffer 10))}
+    {:read-ch (a/chan (a/dropping-buffer 10))
+	 :format :str} ; again, :edn is default
     (go
       (let [{:keys [message]} (<! ws-ch)]
-        (println "Message received:" message)
+        (prn "Message received:" message)
         (>! ws-ch "Hello client from server!")
         (close! ws-ch)))))
 ```
@@ -150,6 +162,23 @@ Thanks to [Thomas Omans (eggsby)](https://github.com/eggsby) for
 channels together! https://gist.github.com/eggsby/6102537
 
 ## Changes
+
+### 0.3.0
+
+Breaking change: defaulting to expecting EDN messages over the
+channel.
+
+This shouldn't impact users who use Chord on both the client and the
+server (the message over the wire will be `"msg"` rather than `msg`,
+but will be automatically parsed back to a string before the user sees
+it).
+
+It will impact users who only use Chord on one end - make sure that
+you pass `{:format :str}` to continue with the same behaviour as
+0.2.2.
+
+Thanks to [Henrik Eneroth](https://github.com/eneroth) for the
+discussion!
 
 ### 0.2.2
 
