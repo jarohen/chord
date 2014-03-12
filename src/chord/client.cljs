@@ -67,6 +67,19 @@
   {:read-ch (a/map< try-read-edn read-ch)
    :write-ch (a/map> pr-str write-ch)})
 
+(defn try-read-json
+  [{:keys [message]}]
+  (try
+    {:message (js->clj message)}
+    (catch Exception e
+      {:error :invalid-json
+       :invalid-msg message})))
+
+(defmethod chord.http-kit/wrap-format :json
+  [{:keys [read-ch write-ch]} _]
+  {:read-ch (a/map< try-read-json read-ch)
+   :write-ch (a/map> clj->js write-ch)})
+
 (defmethod wrap-format :str [chs _]
   chs)
 
