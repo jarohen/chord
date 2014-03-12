@@ -6,4 +6,6 @@
 
   :dependencies [[org.clojure/clojure "1.5.1"]
                  [org.clojure/core.async "0.1.242.0-44b1e3-alpha"]
-                 [http-kit "2.1.10"]])
+                 [http-kit "2.1.10"]]
+  :profiles {:dev {:dependencies [[org.clojure/tools.reader "0.8.3"]
+                                  [cheshire "5.3.1"]]}})
