@@ -3,6 +3,7 @@
             [clojure.core.async :as a :refer [chan <! >! put! close! go-loop]]
             [clojure.core.async.impl.protocols :as p]
             [clojure.tools.reader.edn :as edn]
+            [cheshire.core :as json]
             [clojure.set :refer [rename-keys]]))
 
 (defn- read-from-ch! [ch ws]
@@ -51,6 +52,19 @@
 (defmethod wrap-format :edn [{:keys [read-ch write-ch]} _]
   {:read-ch (a/map< try-read-edn read-ch)
    :write-ch (a/map> pr-str write-ch)})
+
+(defn try-read-json
+  [{:keys [message]}]
+  (try
+    {:message (json/parse-string message)}
+    (catch Exception e
+      {:error :invalid-json
+       :invalid-msg message})))
+
+(defmethod chord.http-kit/wrap-format :json
+  [{:keys [read-ch write-ch]} _]
+  {:read-ch (a/map< try-read-json read-ch)
+   :write-ch (a/map> json/generate-string write-ch)})
 
 (defmethod wrap-format :str [chs _]
   chs)
