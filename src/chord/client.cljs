@@ -93,7 +93,7 @@
     opts             - (optional) map to configure reading/writing channels
       :read-ch       - (optional) (possibly buffered) channel to use for reading the websocket
       :write-ch      - (optional) (possibly buffered) channel to use for writing to the websocket
-      :format        - (optional, default :edn) data format to use on the channel, (at the moment) either :edn or :str.
+      :format        - (optional, default :edn) data format to use on the channel, (at the moment) either :edn, :json or :str.
 
    Usage:
     (:require [cljs.core.async :as a])
