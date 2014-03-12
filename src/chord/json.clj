@@ -9,7 +9,7 @@
   (try
     {:message (json/parse-string message)}
     (catch Exception e
-      {:error :invalid-edn
+      {:error :invalid-json
        :invalid-msg message})))
 
 (defmethod chord.http-kit/wrap-format :json
