@@ -71,7 +71,7 @@
   [{:keys [message]}]
   (try
     {:message (js->clj message)}
-    (catch Exception e
+    (catch js/Error e
       {:error :invalid-json
        :invalid-msg message})))
 
