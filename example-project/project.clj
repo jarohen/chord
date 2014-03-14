@@ -10,7 +10,7 @@
                  [compojure "1.1.5"]
                  [hiccup "1.0.4"]
 
-                 [org.clojure/clojurescript "0.0-2014"]
+                 [org.clojure/clojurescript "0.0-2173"]
                  [org.clojure/tools.reader "0.8.3"]
 
                  [prismatic/dommy "0.1.2"]]
