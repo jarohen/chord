@@ -86,6 +86,9 @@
 (defmethod wrap-format nil [chs _]
   (wrap-format chs :edn))
 
+(defmethod wrap-format :default [chs format]
+  (throw (str "ERROR: Invalid Chord channel format: " format)))
+
 (defn ws-ch
   "Creates websockets connection and returns a 2-sided channel when the websocket is opened.
    Arguments:
