@@ -14,7 +14,9 @@
                  [org.clojure/clojurescript "0.0-2173"]
                  [org.clojure/tools.reader "0.8.3"]
 
-                 [prismatic/dommy "0.1.2"]]
+                 [prismatic/dommy "0.1.2"]
+
+                 [jarohen/clidget "0.2.0"]]
 
   :plugins [[lein-pdo "0.1.1"]
             [jarohen/lein-frodo "0.2.11"]

@@ -1,39 +1,13 @@
 (ns chord.example-client
   (:require [chord.client :refer [ws-ch]]
-            [cljs.core.async :refer [<! >! put! close! timeout]]
+            [cljs.core.async :refer [chan <! >! put! close! timeout]]
             [dommy.core :as d]
-            [cljs.reader :as edn])
-  (:require-macros [cljs.core.async.macros :refer [go]]
+            [cljs.reader :as edn]
+            [clidget.widget :refer [defwidget] :include-macros true])
+  (:require-macros [cljs.core.async.macros :refer [go go-loop]]
                    [dommy.macros :refer [node sel1]]))
 
-(defn render-page [bind-input! bind-list!]
-  (node
-   (list
-    [:div
-     [:h3 "Send a message to the server:"]
-     (doto (node [:input {:type :text :size 50}])
-       bind-input!)]
-    [:div
-     [:h3 "Messages from the server:"]
-     (doto (node [:div])
-       bind-list!)])))
-
-(defn render-list [msgs]
-  (node
-   [:ul
-    (if (seq msgs)
-      (for [msg msgs]
-        [:li (pr-str msg)])
-      [:li "None yet."])]))
-
-(defn list-binder [msgs]
-  (fn [$list]
-    (add-watch msgs ::list
-               (fn [_ _ _ msgs]
-                 (->> (reverse msgs)
-                      (take 10)
-                      (render-list)
-                      (d/replace-contents! $list))))))
+(enable-console-print!)
 
 (defn try-read-edn [s]
   (try
@@ -43,32 +17,60 @@
         edn))
     (catch js/Error _ s)))
 
-(defn input-binder [ch]
-  (fn [$input]
-    (d/listen! $input :keyup
-               (fn [e]
-                 (when (= 13 (.-keyCode e))
-                   (put! ch (try-read-edn (d/value $input)))
-                   (d/set-value! $input ""))))
-    (go (<! (timeout 200)) (.focus $input))))
+(defn message-box [new-msg-ch]
+  (node
+   [:div
+    [:h3 "Send a message to the server:"]
+    (let [text-box (node [:input {:type :text, :size 50, :autofocus true}])]
+      (doto text-box
+        (d/listen! :keyup
+          (fn [e]
+            (when (= 13 (.-keyCode e))
+              (put! new-msg-ch (try-read-edn (d/value text-box)))
+              (d/set-value! text-box ""))))))]))
 
-(defn bind-msgs [ch msgs]
-  (go
-   (loop []
-     (when-let [msg (<! ch)]
-       (swap! msgs conj msg)
-       (recur)))))
+(defwidget message-list [{:keys [msgs]}]
+  (node
+   [:div
+    [:h3 "Messages from the server:"]
+    [:ul
+     (if (seq msgs)
+       (for [msg msgs]
+         [:li (pr-str msg)])
+       [:li "None yet."])]]))
+
+(defn add-msg [msgs new-msg]
+  (->> (cons new-msg msgs)
+       (take 10)))
+
+(defn receive-msgs! [!msgs server-ch]
+  (go-loop []
+    (when-let [msg (<! server-ch)]
+      (swap! !msgs add-msg msg)
+      (recur))))
+
+(defn send-msgs! [new-msg-ch server-ch]
+  (go-loop []
+    (when-let [msg (<! new-msg-ch)]
+      (>! server-ch msg)
+      (recur))))
 
 (set! (.-onload js/window)
       (fn []
         (go
-         (let [msgs (atom [])
-               ws (<! (ws-ch "ws://localhost:3000/ws" {:format :json-kw}))]
-           (bind-msgs ws msgs)
-           (d/replace-contents! (sel1 :#content)
-                                (render-page (input-binder ws)
-                                             (list-binder msgs)))
-           (reset! msgs [])))))
+          (let [server-ch (<! (ws-ch "ws://localhost:3000/ws" {:format :json-kw}))
+              
+                !msgs (doto (atom [])
+                        (receive-msgs! server-ch))
+              
+                new-msg-ch (doto (chan)
+                             (send-msgs! server-ch))]
+          
+            (d/replace-contents! (sel1 :#content)
+                                 (node
+                                  [:div
+                                   (message-box new-msg-ch)
+                                   (message-list {:!msgs !msgs})]))))))
 
 
 
