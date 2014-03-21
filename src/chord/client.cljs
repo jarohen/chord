@@ -75,8 +75,7 @@
       {:error :invalid-json
        :invalid-msg message})))
 
-(defmethod wrap-format :json
-  [{:keys [read-ch write-ch]} _]
+(defmethod wrap-format :json [{:keys [read-ch write-ch]} _]
   {:read-ch (a/map< try-read-json read-ch)
    :write-ch (a/map> (comp js/JSON.stringify clj->js) write-ch)})
 
