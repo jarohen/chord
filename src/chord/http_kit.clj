@@ -70,6 +70,9 @@
 (defmethod wrap-format nil [chs _]
   (wrap-format chs :edn))
 
+(defmethod wrap-format :default [chs format]
+  (throw (ex-info "ERROR: Invalid Chord channel format" {:format format})))
+
 (defn core-async-ch [httpkit-ch {:keys [read-ch write-ch format]}]
   (let [{:keys [read-ch write-ch]} (-> {:read-ch (or read-ch (chan))
                                         :write-ch (or write-ch (chan))}
