@@ -20,7 +20,7 @@
       (prn "Message received:" msg)
       (>! ws-channel (if error
                        (format "Error: '%s'." (pr-str msg))
-                       (format "You passed: '%s' at %s." (pr-str message) (java.util.Date.))))
+                       {:received (format "You passed: '%s' at %s." (pr-str message) (java.util.Date.))}))
       (recur))))
 
 (defroutes app-routes
