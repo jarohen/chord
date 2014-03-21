@@ -79,6 +79,9 @@
   {:read-ch (a/map< try-read-json read-ch)
    :write-ch (a/map> (comp js/JSON.stringify clj->js) write-ch)})
 
+(defmethod wrap-format :json-kw [chs _]
+  (update-in (wrap-format chs :json) [:read-ch] #(a/map< keywordize-keys %)))
+
 (defmethod wrap-format :str [chs _]
   chs)
 
@@ -95,7 +98,8 @@
     opts             - (optional) map to configure reading/writing channels
       :read-ch       - (optional) (possibly buffered) channel to use for reading the websocket
       :write-ch      - (optional) (possibly buffered) channel to use for writing to the websocket
-      :format        - (optional, default :edn) data format to use on the channel, (at the moment) either :edn, :json or :str.
+      :format        - (optional, default :edn) data format to use on the channel, (at the moment)
+                                  either :edn, :json, :json-kw or :str.
 
    Usage:
     (:require [cljs.core.async :as a])
