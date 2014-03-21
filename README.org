@@ -60,14 +60,14 @@ Errors in the web-socket channel are returned as a map with an
 #+END_SRC
 
 As of 0.3.0, you can pass a =:format= option, to pass messages over
-the channel as EDN (default), as raw strings, or JSON (0.3.1):
+the channel as EDN (default), as raw strings, or JSON (0.3.1). Valid
+formats are =#{:edn :json :json-kw :str}=, defaulting to =:edn=.
 
 #+BEGIN_SRC clojure
   (:require [cljs.core.async :as a])
   (ws-ch "ws://localhost:3000/ws"
-         {:format :str}) ; {:format :edn} is default
+         {:format :json-kw})
 #+END_SRC		
-
 
 As of 0.2.1, you can configure the buffering of the channel by
 (optionally) passing custom read/write channels, as follows:
@@ -76,7 +76,7 @@ As of 0.2.1, you can configure the buffering of the channel by
   (:require [cljs.core.async :as a])
   (ws-ch "ws://localhost:3000/ws"
          {:read-ch (a/chan (a/sliding-buffer 10))
-              :write-ch (a/chan 5)})
+          :write-ch (a/chan 5)})
 #+END_SRC
 
 By default, Chord uses unbuffered channels, like core.async itself.
