@@ -112,7 +112,9 @@
           (recur))))"
   
   [req ch-name & [opts & body]]
-  (let [opts? (and (map? opts) (seq body))
+  (let [opts? (and (or (map? opts)
+                       (:opts (meta opts)))
+                   (seq body))
         body (cond->> body
                (not opts?) (cons opts))
         opts (when opts? opts)]
@@ -132,7 +134,7 @@
   (fn [req]
     (if (:websocket? req)
       (with-channel req ws-conn
-        (or opts {})
+        ^:opts (or opts {})
         (handler (assoc req :ws-channel ws-conn)))
       (handler req))))
 
