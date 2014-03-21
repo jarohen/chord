@@ -3,7 +3,9 @@
             [clojure.core.async :as a :refer [chan <! >! put! close! go-loop]]
             [clojure.core.async.impl.protocols :as p]
             [clojure.tools.reader.edn :as edn]
-            [clojure.set :refer [rename-keys]]))
+            [cheshire.core :as json]
+            [clojure.set :refer [rename-keys]]
+            [clojure.walk :refer [keywordize-keys]]))
 
 (defn- read-from-ch! [ch ws]
   (http/on-receive ws #(put! ch {:message %})))
@@ -52,11 +54,29 @@
   {:read-ch (a/map< try-read-edn read-ch)
    :write-ch (a/map> pr-str write-ch)})
 
+(defn try-read-json [{:keys [message]}]
+  (try
+    {:message (json/parse-string message)}
+    (catch Exception e
+      {:error :invalid-json
+       :invalid-msg message})))
+
+(defmethod wrap-format :json [{:keys [read-ch write-ch]} _]
+  {:read-ch (a/map< try-read-json read-ch)
+   :write-ch (a/map> json/generate-string write-ch)})
+
+(defmethod wrap-format :json-kw [chs _]
+  (-> (wrap-format chs :json)
+      (update-in [:read-ch] #(a/map< keywordize-keys %))))
+
 (defmethod wrap-format :str [chs _]
   chs)
 
 (defmethod wrap-format nil [chs _]
   (wrap-format chs :edn))
+
+(defmethod wrap-format :default [chs format]
+  (throw (ex-info "ERROR: Invalid Chord channel format" {:format format})))
 
 (defn core-async-ch [httpkit-ch {:keys [read-ch write-ch format]}]
   (let [{:keys [read-ch write-ch]} (-> {:read-ch (or read-ch (chan))
@@ -77,7 +97,8 @@
     opts        - (optional) map to configure reading/writing channels
       :read-ch  - (optional) (possibly buffered) channel to use for reading the websocket
       :write-ch - (optional) (possibly buffered) channel to use for writing to the websocket
-      :format   - (optional, default :edn) data format to use on the channel, (at the moment) either :edn or :str.
+      :format   - (optional) data format to use on the channel, (at the moment)
+                             either :edn (default), :json, :json-kw or :str.
 
    Usage:
     (require '[clojure.core.async :as a])
@@ -98,7 +119,9 @@
           (recur))))"
   
   [req ch-name & [opts & body]]
-  (let [opts? (and (map? opts) (seq body))
+  (let [opts? (and (or (map? opts)
+                       (:opts (meta opts)))
+                   (seq body))
         body (cond->> body
                (not opts?) (cons opts))
         opts (when opts? opts)]
@@ -118,7 +141,7 @@
   (fn [req]
     (if (:websocket? req)
       (with-channel req ws-conn
-        (or opts {})
+        ^:opts (or opts {})
         (handler (assoc req :ws-channel ws-conn)))
       (handler req))))
 

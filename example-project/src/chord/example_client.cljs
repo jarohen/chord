@@ -63,7 +63,7 @@
       (fn []
         (go
          (let [msgs (atom [])
-               ws (<! (ws-ch "ws://localhost:3000/ws"))]
+               ws (<! (ws-ch "ws://localhost:3000/ws" {:format :json-kw}))]
            (bind-msgs ws msgs)
            (d/replace-contents! (sel1 :#content)
                                 (render-page (input-binder ws)

@@ -1,7 +1,8 @@
 (ns chord.client
   (:require [cljs.core.async :as a :refer [chan <! >! put! close!]]
             [cljs.core.async.impl.protocols :as p]
-            [cljs.reader :as edn])
+            [cljs.reader :as edn]
+            [clojure.walk :refer [keywordize-keys]])
   (:require-macros [cljs.core.async.macros :refer [go-loop]]))
 
 (defn- read-from-ch! [ch ws]
@@ -67,11 +68,28 @@
   {:read-ch (a/map< try-read-edn read-ch)
    :write-ch (a/map> pr-str write-ch)})
 
+(defn try-read-json [{:keys [message]}]
+  (try
+    {:message (-> message js/JSON.parse js->clj)}
+    (catch js/Error e
+      {:error :invalid-json
+       :invalid-msg message})))
+
+(defmethod wrap-format :json [{:keys [read-ch write-ch]} _]
+  {:read-ch (a/map< try-read-json read-ch)
+   :write-ch (a/map> (comp js/JSON.stringify clj->js) write-ch)})
+
+(defmethod wrap-format :json-kw [chs _]
+  (update-in (wrap-format chs :json) [:read-ch] #(a/map< keywordize-keys %)))
+
 (defmethod wrap-format :str [chs _]
   chs)
 
 (defmethod wrap-format nil [chs _]
   (wrap-format chs :edn))
+
+(defmethod wrap-format :default [chs format]
+  (throw (str "ERROR: Invalid Chord channel format: " format)))
 
 (defn ws-ch
   "Creates websockets connection and returns a 2-sided channel when the websocket is opened.
@@ -80,7 +98,8 @@
     opts             - (optional) map to configure reading/writing channels
       :read-ch       - (optional) (possibly buffered) channel to use for reading the websocket
       :write-ch      - (optional) (possibly buffered) channel to use for writing to the websocket
-      :format        - (optional, default :edn) data format to use on the channel, (at the moment) either :edn or :str.
+      :format        - (optional) data format to use on the channel, (at the moment)
+                                  either :edn (default), :json, :json-kw or :str.
 
    Usage:
     (:require [cljs.core.async :as a])

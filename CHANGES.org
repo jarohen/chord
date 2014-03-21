@@ -1,4 +1,13 @@
 * Changes
+** 0.3.1
+
+Added JSON support - you can now pass ={:format :json}= or
+={:format :json-kw}= to the websocket constructors.
+
+Fixed bug whereby options passed to =wrap-websocket-handler= weren't
+being propagated through.
+
+Thanks to Michael Klishin and Yodit Stanton for their PR!
 
 ** 0.3.0
 
