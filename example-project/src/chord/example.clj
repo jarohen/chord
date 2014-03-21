@@ -26,7 +26,7 @@
 (defroutes app-routes
   (GET "/" [] (response (page-frame)))
   (GET "/ws" [] (-> ws-handler
-                    (wrap-websocket-handler {:format :json})))
+                    (wrap-websocket-handler {:format :json-kw})))
   (resources "/js" {:root "js"}))
 
 (def app

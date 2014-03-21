@@ -4,7 +4,8 @@
             [clojure.core.async.impl.protocols :as p]
             [clojure.tools.reader.edn :as edn]
             [cheshire.core :as json]
-            [clojure.set :refer [rename-keys]]))
+            [clojure.set :refer [rename-keys]]
+            [clojure.walk :refer [keywordize-keys]]))
 
 (defn- read-from-ch! [ch ws]
   (http/on-receive ws #(put! ch {:message %})))
@@ -63,6 +64,10 @@
 (defmethod wrap-format :json [{:keys [read-ch write-ch]} _]
   {:read-ch (a/map< try-read-json read-ch)
    :write-ch (a/map> json/generate-string write-ch)})
+
+(defmethod wrap-format :json-kw [chs _]
+  (-> (wrap-format chs :json)
+      (update-in [:read-ch] #(a/map< keywordize-keys %))))
 
 (defmethod wrap-format :str [chs _]
   chs)
