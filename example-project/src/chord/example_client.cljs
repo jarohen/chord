@@ -20,7 +20,7 @@
 (defn message-box [new-msg-ch]
   (node
    [:div
-    [:h3 "Send a message to the server:"]
+    [:h3 "Send a message to the server: (either EDN or raw string)"]
     (let [text-box (node [:input {:type :text, :size 50, :autofocus true}])]
       (doto text-box
         (d/listen! :keyup
