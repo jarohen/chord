@@ -11,16 +11,16 @@
                  [hiccup "1.0.4"]
 
                  [org.clojure/core.async "0.1.267.0-0d7780-alpha"]
-                 [org.clojure/clojurescript "0.0-2173"]
-                 [org.clojure/tools.reader "0.8.3"]
+                 [org.clojure/clojurescript "0.0-2202"]
+                 [org.clojure/tools.reader "0.8.4"]
 
                  [prismatic/dommy "0.1.2"]
 
                  [jarohen/clidget "0.2.0"]]
 
   :plugins [[lein-pdo "0.1.1"]
-            [jarohen/lein-frodo "0.2.11"]
-            [lein-cljsbuild "1.0.2"]]
+            [jarohen/lein-frodo "0.3.0-rc2"]
+            [lein-cljsbuild "1.0.3"]]
 
   :frodo/config-resource "chord-example.edn"
 
