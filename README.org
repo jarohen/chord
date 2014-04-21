@@ -13,7 +13,7 @@ Include the following in your =project.clj=:
 
 *** Example project
 
-There is an simple example server/client project under the
+There is a simple example server/client project under the
 =example-project= directory. The client sends websocket messages to
 the server, that get echoed back to the client and written on the
 page.
