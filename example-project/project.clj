@@ -12,7 +12,6 @@
 
                  [org.clojure/core.async "0.1.267.0-0d7780-alpha"]
                  [org.clojure/clojurescript "0.0-2202"]
-                 [org.clojure/tools.reader "0.8.4"]
 
                  [prismatic/dommy "0.1.2"]
 
