@@ -153,11 +153,10 @@ You can pass custom channels to =wrap-websocket-handler= as a second
 
 Yes please! Please submit these in the traditional GitHub manner.
 
-** Thanks
+** Contributors
 
-Thanks to [[https://github.com/eggsby][Thomas Omans (eggsby)]] for
-(unknowingly!) providing the idea of how to combine two core.async
-channels together! https://gist.github.com/eggsby/6102537
+Chord's contributors are listed in the ChangeLog - thank you all for
+your help!
 
 ** License
 

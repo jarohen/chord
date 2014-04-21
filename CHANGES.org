@@ -7,7 +7,10 @@ Added JSON support - you can now pass ={:format :json}= or
 Fixed bug whereby options passed to =wrap-websocket-handler= weren't
 being propagated through.
 
-Thanks to Michael Klishin and Yodit Stanton for their PR!
+Thanks to [[https://github.com/michaelklishin][Michael Klishin]] and [[https://github.com/yods][Yodit Stanton]] for their PR!
+
+Thanks also to [[https://github.com/giuliano108][Giuliano Cioffi]] for fixing a dependency issue in the
+example project.
 
 ** 0.3.0
 
@@ -32,6 +35,8 @@ macro-less alternative to =with-channel=.
 
 Thanks to [[https://github.com/malcolmsparks][Malcolm Sparks]] for the tip!
 
+Thanks also to [[https://github.com/rrichardson][Rick Richardson]] for his doc fix.
+
 ** 0.2.1
 
 No breaking changes. Added ability to pass custom buffered channels to
@@ -54,4 +59,8 @@ support.
 ** 0.1.0
 
 Initial release.
+
+Thanks to [[https://github.com/eggsby][Thomas Omans (eggsby)]] for (unknowingly!) providing the idea
+of how to combine two core.async channels together!
+https://gist.github.com/eggsby/6102537
 
