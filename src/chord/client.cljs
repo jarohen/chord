@@ -3,7 +3,7 @@
             [cljs.core.async.impl.protocols :as p]
             [cljs.reader :as edn]
             [clojure.walk :refer [keywordize-keys]])
-  (:require-macros [cljs.core.async.macros :refer [go-loop]]))
+  (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
 (defn- read-from-ch! [ch ws]
   (set! (.-onmessage ws)
@@ -18,25 +18,37 @@
         (.send ws msg)
         (recur)))))
 
-(defn- make-open-ch [ws v]
-  (let [ch (chan)]
-    (set! (.-onopen ws)
-          #(do
-             (put! ch v)
-             (close! ch)))
-    ch))
-
-(defn- on-error [ws read-ch]
+(defn- on-error [ws]
   (set! (.-onerror ws)
         (fn [ev]
-          (let [error (.-data ev)]
-            (put! read-ch {:error error})))))
+          (set! (.-error-seen ws) (or (.-data ev) true)))))
 
-(defn- on-close [ws read-ch write-ch]
+(defn- on-close [ws read-ch write-ch return-channel?]
   (set! (.-onclose ws)
-        (fn []
-          (close! read-ch)
-          (close! write-ch))))
+        (fn [ev]
+          (go ;; using a go block to defer close until put completes
+            (let [error-seen? (.-error-seen ws)]
+              (when error-seen?
+                (let [error-hash {:error (.-reason ev)
+                                  :code (.-code ev)
+                                  :wasClean (.-wasClean ev)}]
+                  (>! read-ch (if return-channel?
+                                (go error-hash)
+                                error-hash))))
+              (close! read-ch)
+              (when write-ch
+                (close! write-ch)))))))
+
+(defn- make-open-ch [ws setup-fn v]
+  (let [ch (chan)]
+    (on-error ws)
+    (on-close ws ch nil true)
+    (set! (.-onopen ws)
+          #(go ;; using a go block to defer close until put completes
+             (setup-fn v)
+             (>! ch v)
+             (close! ch)))
+    ch))
 
 (defn- combine-chs [ws read-ch write-ch]
   (reify
@@ -117,12 +129,12 @@
   (let [web-socket (js/WebSocket. ws-url)
         {:keys [read-ch write-ch]} (-> {:read-ch (or read-ch (chan))
                                         :write-ch (or write-ch (chan))}
-                                       (wrap-format format))]
+                                       (wrap-format format))
+        setup-fn (fn [ws]
+                   (on-error ws)
+                   (on-close ws read-ch write-ch false)
+                   (read-from-ch! read-ch web-socket)
+                   (write-to-ch! write-ch web-socket))]
 
-    (read-from-ch! read-ch web-socket)
-    (write-to-ch! write-ch web-socket)
-    (on-error web-socket read-ch)
-    (on-close web-socket read-ch write-ch)
-    
     (->> (combine-chs web-socket read-ch write-ch)
-         (make-open-ch web-socket))))
+         (make-open-ch web-socket setup-fn))))
