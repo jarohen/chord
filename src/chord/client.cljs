@@ -18,38 +18,7 @@
         (.send ws msg)
         (recur)))))
 
-(defn- on-error [ws]
-  (set! (.-onerror ws)
-        (fn [ev]
-          (set! (.-error-seen ws) (or (.-data ev) true)))))
-
-(defn- on-close [ws read-ch write-ch & [err-meta-channel]]
-  (set! (.-onclose ws)
-        (fn [ev]
-          (go ;; using a go block to defer close until put completes
-            (let [error-seen? (.-error-seen ws)]
-              (when error-seen?
-                (let [error-hash {:error (.-reason ev)
-                                  :code (.-code ev)
-                                  :wasClean (.-wasClean ev)}]
-                  (when err-meta-channel
-                    (>! err-meta-channel (go error-hash)))
-                  (>! read-ch error-hash)))
-              (close! read-ch)
-              (when write-ch
-                (close! write-ch)))))))
-
-(defn- make-open-ch [ws read-ch write-ch v]
-  (let [ch (chan)]
-    (on-error ws)
-    (on-close ws read-ch write-ch ch)
-    (set! (.-onopen ws)
-          #(go ;; using a go block to defer close until put completes
-             (>! ch v)
-             (close! ch)))
-    ch))
-
-(defn- combine-chs [ws read-ch write-ch]
+(defn- combine-chs [read-ch write-ch & [close-fn]]
   (reify
     p/ReadPort
     (take! [_ handler]
@@ -63,28 +32,67 @@
     (close! [_]
       (p/close! read-ch)
       (p/close! write-ch)
-      (.close ws))))
+      (when close-fn
+        (close-fn)))))
+
+(defn- on-error [ws]
+  (set! (.-onerror ws)
+        (fn [ev]
+          (set! (.-error-seen ws) (or (.-data ev) true)))))
+
+(defn- on-close [ws read-ch write-ch & [err-meta-channel]]
+  (set! (.-onclose ws)
+        (fn [ev]
+          (go ;; using a go block to defer close until put completes
+            (let [error-seen? (.-error-seen ws)]
+              (when (or error-seen?
+                        (not (.-wasClean ev)))
+                (let [error-desc {:error (.-reason ev)
+                                  :code (.-code ev)
+                                  :wasClean (.-wasClean ev)}]
+                  (when err-meta-channel
+                    (>! err-meta-channel
+                        (combine-chs
+                         (go error-desc)
+                         (doto (chan) (close!)))))
+                  (>! read-ch error-desc)))
+              (close! read-ch)
+              (close! write-ch))))))
+
+(defn- make-open-ch [ws read-ch write-ch v]
+  (let [ch (chan)]
+    (on-error ws)
+    (on-close ws read-ch write-ch ch)
+    (set! (.-onopen ws)
+          #(go ;; using a go block to defer close until put completes
+             (>! ch v)
+             (close! ch)))
+    ch))
 
 (defmulti wrap-format
   (fn [chs format] format))
 
-(defn try-read-edn [{:keys [message]}]
-  (try
-    {:message (edn/read-string message)}
-    (catch js/Error e
-      {:error :invalid-edn
-       :invalid-msg message})))
+(defn try-read-edn [{:keys [error message] :as data}]
+  (if error
+    data
+    (try
+      {:message (edn/read-string message)}
+      (catch js/Error e
+        {:error :invalid-edn
+         :invalid-msg message}))))
 
 (defmethod wrap-format :edn [{:keys [read-ch write-ch]} _]
   {:read-ch (a/map< try-read-edn read-ch)
    :write-ch (a/map> pr-str write-ch)})
 
-(defn try-read-json [{:keys [message]}]
-  (try
-    {:message (-> message js/JSON.parse js->clj)}
-    (catch js/Error e
-      {:error :invalid-json
-       :invalid-msg message})))
+(defn try-read-json [{:keys [error message] :as data}]
+  (if error
+    data
+    (try
+      {:message (-> message js/JSON.parse js->clj)}
+      (catch js/Error e
+        {:error :invalid-json
+         :invalid-msg message}))))
 
 (defmethod wrap-format :json [{:keys [read-ch write-ch]} _]
   {:read-ch (a/map< try-read-json read-ch)
@@ -131,5 +139,5 @@
                                        (wrap-format format))]
     (read-from-ch! read-ch web-socket)
     (write-to-ch! write-ch web-socket)
-    (->> (combine-chs web-socket read-ch write-ch)
+    (->> (combine-chs read-ch write-ch #(.close web-socket))
          (make-open-ch web-socket read-ch write-ch))))
