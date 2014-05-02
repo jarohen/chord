@@ -23,7 +23,7 @@
         (fn [ev]
           (set! (.-error-seen ws) (or (.-data ev) true)))))
 
-(defn- on-close [ws read-ch write-ch return-channel?]
+(defn- on-close [ws read-ch write-ch & [err-meta-channel]]
   (set! (.-onclose ws)
         (fn [ev]
           (go ;; using a go block to defer close until put completes
@@ -32,20 +32,19 @@
                 (let [error-hash {:error (.-reason ev)
                                   :code (.-code ev)
                                   :wasClean (.-wasClean ev)}]
-                  (>! read-ch (if return-channel?
-                                (go error-hash)
-                                error-hash))))
+                  (when err-meta-channel
+                    (>! err-meta-channel (go error-hash)))
+                  (>! read-ch error-hash)))
               (close! read-ch)
               (when write-ch
                 (close! write-ch)))))))
 
-(defn- make-open-ch [ws setup-fn v]
+(defn- make-open-ch [ws read-ch write-ch v]
   (let [ch (chan)]
     (on-error ws)
-    (on-close ws ch nil true)
+    (on-close ws read-ch write-ch ch)
     (set! (.-onopen ws)
           #(go ;; using a go block to defer close until put completes
-             (setup-fn v)
              (>! ch v)
              (close! ch)))
     ch))
@@ -129,12 +128,8 @@
   (let [web-socket (js/WebSocket. ws-url)
         {:keys [read-ch write-ch]} (-> {:read-ch (or read-ch (chan))
                                         :write-ch (or write-ch (chan))}
-                                       (wrap-format format))
-        setup-fn (fn [ws]
-                   (on-error ws)
-                   (on-close ws read-ch write-ch false)
-                   (read-from-ch! read-ch web-socket)
-                   (write-to-ch! write-ch web-socket))]
-
+                                       (wrap-format format))]
+    (read-from-ch! read-ch web-socket)
+    (write-to-ch! write-ch web-socket)
     (->> (combine-chs web-socket read-ch write-ch)
-         (make-open-ch web-socket setup-fn))))
+         (make-open-ch web-socket read-ch write-ch))))
