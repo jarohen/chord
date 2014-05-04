@@ -17,17 +17,19 @@
         edn))
     (catch js/Error _ s)))
 
+(defn with-enter-handler [$text-box new-msg-ch]
+  (d/listen! $text-box :keyup
+    (fn [e]
+      (when (= 13 (.-keyCode e))
+        (put! new-msg-ch (try-read-edn (d/value $text-box)))
+        (d/set-value! $text-box "")))))
+
 (defn message-box [new-msg-ch]
   (node
    [:div
     [:h3 "Send a message to the server: (either EDN or raw string)"]
-    (let [text-box (node [:input {:type :text, :size 50, :autofocus true}])]
-      (doto text-box
-        (d/listen! :keyup
-          (fn [e]
-            (when (= 13 (.-keyCode e))
-              (put! new-msg-ch (try-read-edn (d/value text-box)))
-              (d/set-value! text-box ""))))))]))
+    (-> (node [:input {:type :text, :size 50, :autofocus true}])
+        (with-enter-handler new-msg-ch))]))
 
 (defwidget message-list [{:keys [msgs]}]
   (node
