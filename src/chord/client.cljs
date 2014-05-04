@@ -43,7 +43,7 @@
 (defn- on-close [ws read-ch write-ch & [err-meta-channel]]
   (set! (.-onclose ws)
         (fn [ev]
-          (go ;; using a go block to defer close until put completes
+          (go
             (let [error-seen? (.-error-seen ws)]
               (when (or error-seen?
                         (not (.-wasClean ev)))
@@ -64,7 +64,7 @@
     (on-error ws)
     (on-close ws read-ch write-ch ch)
     (set! (.-onopen ws)
-          #(go ;; using a go block to defer close until put completes
+          #(go
              (>! ch v)
              (close! ch)))
     ch))
