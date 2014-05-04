@@ -5,13 +5,13 @@
             [clojure.walk :refer [keywordize-keys]])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
-(defn- read-from-ch! [ch ws]
+(defn- read-from-ws! [ch ws]
   (set! (.-onmessage ws)
         (fn [ev]
           (let [message (.-data ev)]
             (put! ch {:message message})))))
 
-(defn- write-to-ch! [ch ws]
+(defn- write-to-ws! [ch ws]
   (go-loop []
     (let [msg (<! ch)]
       (when msg
