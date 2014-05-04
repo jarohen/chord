@@ -25,9 +25,12 @@
 
   :aliases {"dev" ["pdo" "cljsbuild" "auto," "frodo"]}
 
+  :source-paths ["src" "../src" "../target/generated/clj"]
+  
   :resource-paths ["resources" "target/resources"]
 
-  :cljsbuild {:builds [{:source-paths ["src" "../src/"]
+  :cljsbuild {:builds [{:source-paths ["src" "../src/"
+                                       "../target/generated/clj" "../target/generated/cljs"]
                         :compiler {:output-to "target/resources/js/chord-example.js"
                                    :optimizations :whitespace
                                    :pretty-print true}}]})
