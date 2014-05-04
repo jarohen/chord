@@ -3,12 +3,7 @@
             [chord.channels :refer [read-from-ws! write-to-ws! bidi-ch]]
             [chord.format :refer [wrap-format]])
   
-  (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
-
-(defn- on-error [ws]
-  (set! (.-onerror ws)
-        (fn [ev]
-          (set! (.-error-seen ws) (or (.-data ev) true)))))
+  (:require-macros [cljs.core.async.macros :refer [go go-loop alt!]]))
 
 (defn- on-close [ws read-ch write-ch & [err-meta-channel]]
   (set! (.-onclose ws)
@@ -31,7 +26,6 @@
 
 (defn- make-open-ch [ws read-ch write-ch v]
   (let [ch (chan)]
-    (on-error ws)
     (on-close ws read-ch write-ch ch)
     (set! (.-onopen ws)
           #(go
@@ -39,19 +33,10 @@
              (close! ch)))
     ch))
 
-(defn try-read [read-fn]
-  (fn [{:keys [error message] :as data}]
-    (if error
-      data
-      
-      (try
-        {:message (read-fn message)}
-        (catch js/Error e
-          {:error :invalid-format
-           :cause e
-           :invalid-msg message})))))
-
-
+(defn close-event->maybe-error [ev]
+  (when-not (.-wasClean ev)
+    {:reason (.-reason ev)
+     :code (.-code ev)}))
 
 (defn ws-ch
   "Creates websockets connection and returns a 2-sided channel when the websocket is opened.
@@ -79,9 +64,37 @@
   (let [web-socket (js/WebSocket. ws-url)
         {:keys [read-ch write-ch]} (-> {:read-ch (or read-ch (chan))
                                         :write-ch (or write-ch (chan))}
-                                       (wrap-format format))]
+                                       (wrap-format format))
+        open-ch (a/chan)
+        close-ch (a/chan)]
+
     (read-from-ws! web-socket read-ch)
     (write-to-ws! web-socket write-ch)
-    
-    (->> (bidi-ch read-ch write-ch {:on-close #(.close web-socket)})
-         (make-open-ch web-socket read-ch write-ch))))
+
+    (set! (.-onopen web-socket)
+          #(put! open-ch %))
+    (set! (.-onclose web-socket)
+          #(put! close-ch %))
+
+    (let [ws-chan (bidi-ch read-ch write-ch {:on-close #(.close web-socket)})
+          initial-ch (a/chan)]
+
+      (go-loop [opened? false]
+        (alt!
+          open-ch ([_]
+                     (a/>! initial-ch {:ws-channel ws-chan})
+                     (a/close! initial-ch)
+                     (recur true))
+
+          close-ch ([ev]
+                      (let [maybe-error (close-event->maybe-error ev)]
+                        (when maybe-error
+                          (a/>! (if opened?
+                                  read-ch
+                                  initial-ch)
+                                {:error maybe-error}))
+
+                        (a/close! ws-chan)
+                        (a/close! initial-ch)))))
+
+      initial-ch)))
