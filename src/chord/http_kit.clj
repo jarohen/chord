@@ -52,12 +52,14 @@
           (recur))))"
   
   [req ch-name & [opts & body]]
+  
   (let [opts? (and (or (map? opts)
                        (:opts (meta opts)))
                    (seq body))
+        opts (when opts? opts)
         body (cond->> body
-               (not opts?) (cons opts))
-        opts (when opts? opts)]
+               (not opts?) (cons opts))]
+    
     `(http/with-channel ~req httpkit-ch#
        (let [~ch-name (core-async-ch httpkit-ch# ~opts)]
          ~@body))))
