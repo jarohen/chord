@@ -69,33 +69,26 @@
              (close! ch)))
     ch))
 
+(defn try-read [read-fn]
+  (fn [{:keys [error message] :as data}]
+    (if error
+      data
+      
+      (try
+        {:message (read-fn message)}
+        (catch js/Error e
+          {:error :invalid-format
+           :invalid-msg message})))))
+
 (defmulti wrap-format
   (fn [chs format] format))
 
-(defn try-read-edn [{:keys [error message] :as data}]
-  (if error
-    data
-    (try
-      {:message (edn/read-string message)}
-      (catch js/Error e
-        {:error :invalid-edn
-         :invalid-msg message}))))
-
 (defmethod wrap-format :edn [{:keys [read-ch write-ch]} _]
-  {:read-ch (a/map< try-read-edn read-ch)
+  {:read-ch (a/map< (try-read edn/read-string) read-ch)
    :write-ch (a/map> pr-str write-ch)})
 
-(defn try-read-json [{:keys [error message] :as data}]
-  (if error
-    data
-    (try
-      {:message (-> message js/JSON.parse js->clj)}
-      (catch js/Error e
-        {:error :invalid-json
-         :invalid-msg message}))))
-
 (defmethod wrap-format :json [{:keys [read-ch write-ch]} _]
-  {:read-ch (a/map< try-read-json read-ch)
+  {:read-ch (a/map< (try-read (comp js->clj js/JSON.parse)) read-ch)
    :write-ch (a/map> (comp js/JSON.stringify clj->js) write-ch)})
 
 (defmethod wrap-format :json-kw [chs _]
