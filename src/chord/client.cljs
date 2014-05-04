@@ -18,7 +18,7 @@
         (.send ws msg)
         (recur)))))
 
-(defn- combine-chs [read-ch write-ch & [close-fn]]
+(defn- bidi-ch [read-ch write-ch & [close-fn]]
   (reify
     p/ReadPort
     (take! [_ handler]
@@ -52,7 +52,7 @@
                                   :wasClean (.-wasClean ev)}]
                   (when err-meta-channel
                     (>! err-meta-channel
-                        (combine-chs
+                        (bidi-ch
                          (go error-desc)
                          (doto (chan) (close!)))))
                   (>! read-ch error-desc)))
@@ -132,5 +132,5 @@
                                        (wrap-format format))]
     (read-from-ch! read-ch web-socket)
     (write-to-ch! write-ch web-socket)
-    (->> (combine-chs read-ch write-ch #(.close web-socket))
+    (->> (bidi-ch read-ch write-ch #(.close web-socket))
          (make-open-ch web-socket read-ch write-ch))))
