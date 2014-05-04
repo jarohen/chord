@@ -60,19 +60,27 @@
 (set! (.-onload js/window)
       (fn []
         (go
-          (let [server-ch (<! (ws-ch "ws://localhost:3000/ws" {:format :json-kw}))
+          (let [{:keys [ws-channel error]} (<! (ws-ch "ws://localhost:3000/ws"
+                                                      {:format :json-kw}))]
+
+            (if error
+              (d/replace-contents! (sel1 :#content)
+                                     (node
+                                      [:div
+                                       "Couldn't connect to websocket: "
+                                       (pr-str error)]))
               
-                !msgs (doto (atom [])
-                        (receive-msgs! server-ch))
-              
-                new-msg-ch (doto (chan)
-                             (send-msgs! server-ch))]
-          
-            (d/replace-contents! (sel1 :#content)
-                                 (node
-                                  [:div
-                                   (message-box new-msg-ch)
-                                   (message-list {:!msgs !msgs})]))))))
+              (let [!msgs (doto (atom [])
+                            (receive-msgs! ws-channel))
+                    
+                    new-msg-ch (doto (chan)
+                                 (send-msgs! ws-channel))]
+
+                (d/replace-contents! (sel1 :#content)
+                                     (node
+                                      [:div
+                                       (message-box new-msg-ch)
+                                       (message-list {:!msgs !msgs})]))))))))
 
 
 
