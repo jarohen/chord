@@ -78,6 +78,7 @@
         {:message (read-fn message)}
         (catch js/Error e
           {:error :invalid-format
+           :cause e
            :invalid-msg message})))))
 
 (defmulti wrap-format
