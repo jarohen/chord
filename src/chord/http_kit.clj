@@ -1,21 +1,8 @@
 (ns chord.http-kit
-  (:require [org.httpkit.server :as http]
-            [clojure.core.async :as a :refer [chan <! >! put! close! go-loop]]
-            [clojure.core.async.impl.protocols :as p]
-            [clojure.tools.reader.edn :as edn]
-            [cheshire.core :as json]
-            [clojure.set :refer [rename-keys]]
-            [clojure.walk :refer [keywordize-keys]]))
-
-(defn- read-from-ch! [ch ws]
-  (http/on-receive ws #(put! ch {:message %})))
-
-(defn- write-to-ch! [ch ws]
-  (go-loop []
-    (let [msg (<! ch)]
-      (when msg
-        (http/send! ws msg)
-        (recur)))))
+  (:require [clojure.core.async :as a :refer [chan <! >! close! go-loop]]
+            [org.httpkit.server :as http]
+            [chord.channels :refer [read-from-ws! write-to-ws! bidi-ch]]
+            [chord.format :refer [wrap-format]]))
 
 (defn- on-close [ws read-ch write-ch]
   (http/on-close ws
@@ -24,70 +11,16 @@
                    (close! read-ch)
                    (close! write-ch))))
 
-(defn- combine-chs [ws read-ch write-ch]
-  (reify
-    p/ReadPort
-    (take! [_ handler]
-      (p/take! read-ch handler))
-
-    p/WritePort
-    (put! [_ msg handler]
-      (p/put! write-ch msg handler))
-
-    p/Channel
-    (close! [_]
-      (p/close! read-ch)
-      (p/close! write-ch)
-      (http/close ws))))
-
-(defmulti wrap-format
-  (fn [chs format] format))
-
-(defn try-read-edn [{:keys [message]}]
-  (try
-    {:message (edn/read-string message)}
-    (catch Exception e
-      {:error :invalid-edn
-       :invalid-msg message})))
-
-(defmethod wrap-format :edn [{:keys [read-ch write-ch]} _]
-  {:read-ch (a/map< try-read-edn read-ch)
-   :write-ch (a/map> pr-str write-ch)})
-
-(defn try-read-json [{:keys [message]}]
-  (try
-    {:message (json/parse-string message)}
-    (catch Exception e
-      {:error :invalid-json
-       :invalid-msg message})))
-
-(defmethod wrap-format :json [{:keys [read-ch write-ch]} _]
-  {:read-ch (a/map< try-read-json read-ch)
-   :write-ch (a/map> json/generate-string write-ch)})
-
-(defmethod wrap-format :json-kw [chs _]
-  (-> (wrap-format chs :json)
-      (update-in [:read-ch] #(a/map< keywordize-keys %))))
-
-(defmethod wrap-format :str [chs _]
-  chs)
-
-(defmethod wrap-format nil [chs _]
-  (wrap-format chs :edn))
-
-(defmethod wrap-format :default [chs format]
-  (throw (ex-info "ERROR: Invalid Chord channel format" {:format format})))
-
 (defn core-async-ch [httpkit-ch {:keys [read-ch write-ch format]}]
   (let [{:keys [read-ch write-ch]} (-> {:read-ch (or read-ch (chan))
                                         :write-ch (or write-ch (chan))}
                                        (wrap-format format))]
 
-    (read-from-ch! read-ch httpkit-ch)
-    (write-to-ch! write-ch httpkit-ch)
+    (read-from-ws! httpkit-ch read-ch)
+    (write-to-ws! httpkit-ch write-ch)
     (on-close httpkit-ch read-ch write-ch)
     
-    (combine-chs httpkit-ch read-ch write-ch)))
+    (bidi-ch read-ch write-ch {:on-close #(http/close httpkit-ch)})))
 
 (defmacro with-channel
   "Extracts the websocket from the request and binds it to 'ch-name' in the body

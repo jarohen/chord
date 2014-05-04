@@ -1,39 +1,9 @@
 (ns chord.client
   (:require [cljs.core.async :as a :refer [chan <! >! put! close!]]
-            [cljs.core.async.impl.protocols :as p]
-            [cljs.reader :as edn]
-            [clojure.walk :refer [keywordize-keys]])
+            [chord.channels :refer [read-from-ws! write-to-ws! bidi-ch]]
+            [chord.format :refer [wrap-format]])
+  
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
-
-(defn- read-from-ws! [ch ws]
-  (set! (.-onmessage ws)
-        (fn [ev]
-          (let [message (.-data ev)]
-            (put! ch {:message message})))))
-
-(defn- write-to-ws! [ch ws]
-  (go-loop []
-    (let [msg (<! ch)]
-      (when msg
-        (.send ws msg)
-        (recur)))))
-
-(defn- bidi-ch [read-ch write-ch & [close-fn]]
-  (reify
-    p/ReadPort
-    (take! [_ handler]
-      (p/take! read-ch handler))
-
-    p/WritePort
-    (put! [_ msg handler]
-      (p/put! write-ch msg handler))
-
-    p/Channel
-    (close! [_]
-      (p/close! read-ch)
-      (p/close! write-ch)
-      (when close-fn
-        (close-fn)))))
 
 (defn- on-error [ws]
   (set! (.-onerror ws)
@@ -81,28 +51,7 @@
            :cause e
            :invalid-msg message})))))
 
-(defmulti wrap-format
-  (fn [chs format] format))
 
-(defmethod wrap-format :edn [{:keys [read-ch write-ch]} _]
-  {:read-ch (a/map< (try-read edn/read-string) read-ch)
-   :write-ch (a/map> pr-str write-ch)})
-
-(defmethod wrap-format :json [{:keys [read-ch write-ch]} _]
-  {:read-ch (a/map< (try-read (comp js->clj js/JSON.parse)) read-ch)
-   :write-ch (a/map> (comp js/JSON.stringify clj->js) write-ch)})
-
-(defmethod wrap-format :json-kw [chs _]
-  (update-in (wrap-format chs :json) [:read-ch] #(a/map< keywordize-keys %)))
-
-(defmethod wrap-format :str [chs _]
-  chs)
-
-(defmethod wrap-format nil [chs _]
-  (wrap-format chs :edn))
-
-(defmethod wrap-format :default [chs format]
-  (throw (str "ERROR: Invalid Chord channel format: " format)))
 
 (defn ws-ch
   "Creates websockets connection and returns a 2-sided channel when the websocket is opened.
@@ -131,8 +80,8 @@
         {:keys [read-ch write-ch]} (-> {:read-ch (or read-ch (chan))
                                         :write-ch (or write-ch (chan))}
                                        (wrap-format format))]
-    (read-from-ws! read-ch web-socket)
-    (write-to-ws! write-ch web-socket)
+    (read-from-ws! web-socket read-ch)
+    (write-to-ws! web-socket write-ch)
     
-    (->> (bidi-ch read-ch write-ch #(.close web-socket))
+    (->> (bidi-ch read-ch write-ch {:on-close #(.close web-socket)})
          (make-open-ch web-socket read-ch write-ch))))
