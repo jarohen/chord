@@ -130,7 +130,8 @@
         {:keys [read-ch write-ch]} (-> {:read-ch (or read-ch (chan))
                                         :write-ch (or write-ch (chan))}
                                        (wrap-format format))]
-    (read-from-ch! read-ch web-socket)
-    (write-to-ch! write-ch web-socket)
+    (read-from-ws! read-ch web-socket)
+    (write-to-ws! write-ch web-socket)
+    
     (->> (bidi-ch read-ch write-ch #(.close web-socket))
          (make-open-ch web-socket read-ch write-ch))))
