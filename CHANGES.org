@@ -1,4 +1,20 @@
 * Changes
+** 0.4.0
+
+Breaking change: Channel returned from =chord.client/ws-ch= now
+returns a map; either ={:ws-channel ch}= or ={:error error}=, rather
+than just a channel.
+
+This means that Chord now handles client-side connection and
+disconnection errors a lot more reliably.
+
+Internally, a lot of code has moved to CLJX where possible, cutting
+down on a lot of duplication.
+
+Thanks to [[https://github.com/charles-dyfis-net][Charles Duffy]] for reporting the original issue, his PR,
+fixing a couple of other bugs, and generally for all of his help with
+this release.
+
 ** 0.3.1
 
 Added JSON support - you can now pass ={:format :json}= or
