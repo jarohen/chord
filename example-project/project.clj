@@ -19,11 +19,17 @@
 
   :plugins [[lein-pdo "0.1.1"]
             [jarohen/lein-frodo "0.3.0-rc2"]
-            [lein-cljsbuild "1.0.3"]]
+            [lein-cljsbuild "1.0.3"]
+            [lein-shell "0.4.0"]]
 
   :frodo/config-resource "chord-example.edn"
 
-  :aliases {"dev" ["pdo" "cljsbuild" "auto," "frodo"]}
+  :aliases {"dev" ["do"
+                   ["shell" "mkdir" "-p"
+                    "target/resources"]
+                   ["pdo"
+                    ["cljsbuild" "auto"]
+                    "frodo"]]}
 
   :source-paths ["src" "../src" "../target/generated/clj"]
   
