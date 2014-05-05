@@ -8,7 +8,7 @@ between the triad of CLJ/CLJS, web-sockets and core.async.
 Include the following in your =project.clj=:
 
 #+BEGIN_SRC clojure
-  [jarohen/chord "0.4.0-SNAPSHOT"]
+  [jarohen/chord "0.4.0-rc1"]
 #+END_SRC
 
 *** Example project
