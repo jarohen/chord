@@ -1,4 +1,4 @@
-(ns chord.example
+(ns chord.example.handler
   (:require [ring.util.response :refer [response]]
             [compojure.core :refer [defroutes GET]]
             [compojure.route :refer [resources]]

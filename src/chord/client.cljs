@@ -1,95 +1,42 @@
 (ns chord.client
   (:require [cljs.core.async :as a :refer [chan <! >! put! close!]]
-            [cljs.core.async.impl.protocols :as p]
-            [cljs.reader :as edn]
-            [clojure.walk :refer [keywordize-keys]])
-  (:require-macros [cljs.core.async.macros :refer [go-loop]]))
+            [chord.channels :refer [read-from-ws! write-to-ws! bidi-ch]]
+            [chord.format :refer [wrap-format]])
+  
+  (:require-macros [cljs.core.async.macros :refer [go go-loop alt!]]))
 
-(defn- read-from-ch! [ch ws]
-  (set! (.-onmessage ws)
+(defn- on-close [ws read-ch write-ch & [err-meta-channel]]
+  (set! (.-onclose ws)
         (fn [ev]
-          (let [message (.-data ev)]
-            (put! ch {:message message})))))
+          (go
+            (let [error-seen? (.-error-seen ws)]
+              (when (or error-seen?
+                        (not (.-wasClean ev)))
+                (let [error-desc {:error (.-reason ev)
+                                  :code (.-code ev)
+                                  :wasClean (.-wasClean ev)}]
+                  (when err-meta-channel
+                    (>! err-meta-channel
+                        (bidi-ch
+                         (go error-desc)
+                         (doto (chan) (close!)))))
+                  (>! read-ch error-desc)))
+              (close! read-ch)
+              (close! write-ch))))))
 
-(defn- write-to-ch! [ch ws]
-  (go-loop []
-    (let [msg (<! ch)]
-      (when msg
-        (.send ws msg)
-        (recur)))))
-
-(defn- make-open-ch [ws v]
+(defn- make-open-ch [ws read-ch write-ch v]
   (let [ch (chan)]
+    (on-close ws read-ch write-ch ch)
     (set! (.-onopen ws)
-          #(do
-             (put! ch v)
+          #(go
+             (>! ch v)
              (close! ch)))
     ch))
 
-(defn- on-error [ws read-ch]
-  (set! (.-onerror ws)
-        (fn [ev]
-          (let [error (.-data ev)]
-            (put! read-ch {:error error})))))
-
-(defn- on-close [ws read-ch write-ch]
-  (set! (.-onclose ws)
-        (fn []
-          (close! read-ch)
-          (close! write-ch))))
-
-(defn- combine-chs [ws read-ch write-ch]
-  (reify
-    p/ReadPort
-    (take! [_ handler]
-      (p/take! read-ch handler))
-
-    p/WritePort
-    (put! [_ msg handler]
-      (p/put! write-ch msg handler))
-
-    p/Channel
-    (close! [_]
-      (p/close! read-ch)
-      (p/close! write-ch)
-      (.close ws))))
-
-(defmulti wrap-format
-  (fn [chs format] format))
-
-(defn try-read-edn [{:keys [message]}]
-  (try
-    {:message (edn/read-string message)}
-    (catch js/Error e
-      {:error :invalid-edn
-       :invalid-msg message})))
-
-(defmethod wrap-format :edn [{:keys [read-ch write-ch]} _]
-  {:read-ch (a/map< try-read-edn read-ch)
-   :write-ch (a/map> pr-str write-ch)})
-
-(defn try-read-json [{:keys [message]}]
-  (try
-    {:message (-> message js/JSON.parse js->clj)}
-    (catch js/Error e
-      {:error :invalid-json
-       :invalid-msg message})))
-
-(defmethod wrap-format :json [{:keys [read-ch write-ch]} _]
-  {:read-ch (a/map< try-read-json read-ch)
-   :write-ch (a/map> (comp js/JSON.stringify clj->js) write-ch)})
-
-(defmethod wrap-format :json-kw [chs _]
-  (update-in (wrap-format chs :json) [:read-ch] #(a/map< keywordize-keys %)))
-
-(defmethod wrap-format :str [chs _]
-  chs)
-
-(defmethod wrap-format nil [chs _]
-  (wrap-format chs :edn))
-
-(defmethod wrap-format :default [chs format]
-  (throw (str "ERROR: Invalid Chord channel format: " format)))
+(defn close-event->maybe-error [ev]
+  (when-not (.-wasClean ev)
+    {:reason (.-reason ev)
+     :code (.-code ev)}))
 
 (defn ws-ch
   "Creates websockets connection and returns a 2-sided channel when the websocket is opened.
@@ -117,12 +64,37 @@
   (let [web-socket (js/WebSocket. ws-url)
         {:keys [read-ch write-ch]} (-> {:read-ch (or read-ch (chan))
                                         :write-ch (or write-ch (chan))}
-                                       (wrap-format format))]
+                                       (wrap-format format))
+        open-ch (a/chan)
+        close-ch (a/chan)]
 
-    (read-from-ch! read-ch web-socket)
-    (write-to-ch! write-ch web-socket)
-    (on-error web-socket read-ch)
-    (on-close web-socket read-ch write-ch)
-    
-    (->> (combine-chs web-socket read-ch write-ch)
-         (make-open-ch web-socket))))
+    (read-from-ws! web-socket read-ch)
+    (write-to-ws! web-socket write-ch)
+
+    (set! (.-onopen web-socket)
+          #(put! open-ch %))
+    (set! (.-onclose web-socket)
+          #(put! close-ch %))
+
+    (let [ws-chan (bidi-ch read-ch write-ch {:on-close #(.close web-socket)})
+          initial-ch (a/chan)]
+
+      (go-loop [opened? false]
+        (alt!
+          open-ch ([_]
+                     (a/>! initial-ch {:ws-channel ws-chan})
+                     (a/close! initial-ch)
+                     (recur true))
+
+          close-ch ([ev]
+                      (let [maybe-error (close-event->maybe-error ev)]
+                        (when maybe-error
+                          (a/>! (if opened?
+                                  read-ch
+                                  initial-ch)
+                                {:error maybe-error}))
+
+                        (a/close! ws-chan)
+                        (a/close! initial-ch)))))
+
+      initial-ch)))

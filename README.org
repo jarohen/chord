@@ -8,7 +8,7 @@ between the triad of CLJ/CLJS, web-sockets and core.async.
 Include the following in your =project.clj=:
 
 #+BEGIN_SRC clojure
-  [jarohen/chord "0.3.1"]
+  [jarohen/chord "0.4.0"]
 #+END_SRC
 
 *** Example project
@@ -19,41 +19,45 @@ the server, that get echoed back to the client and written on the
 page.
 
 You can run it with =lein dev= - an alias that starts up an http-kit
-server using [[https://github.com/james-henderson/lein-frodo][frodo]] and automatically re-compiles the CLJS.
+server using [[https://github.com/james-henderson/lein-frodo][Frodo]] and automatically re-compiles the CLJS.
 
 *** ClojureScript
 
 *Chord* only has one function, =chord.client/ws-ch=, which takes a
-web-socket URL and returns a channel. When the connection opens
-successfully, this channel then returns a two-way channel that you can
-use to communicate with the web-socket server:
+web-socket URL and returns a map, containing either =:ws-channel= or
+=:error=. When the connection opens successfully, this channel then
+returns a two-way channel that you can use to communicate with the
+web-socket server:
 
 #+BEGIN_SRC clojure
   (:require [chord.client :refer [ws-ch]]
             [cljs.core.async :refer [<! >! put! close!]])
   (:require-macros [cljs.core.async.macros :refer [go]])
-  
+
   (go
-    (let [ws (<! (ws-ch "ws://localhost:3000/ws"))]
-      (>! ws "Hello server from client!")))
+    (let [{:keys [ws-channel error]} (<! (ws-ch "ws://localhost:3000/ws"))]
+      (if-not error
+        (>! ws-channel "Hello server from client!")
+        (js/console.log "Error:" (pr-str error)))))
 #+END_SRC
-		
+
 Messages that come from the server are received as a map with a
 =:message= key:
 
 #+BEGIN_SRC clojure
   (go
-    (let [ws (<! (ws-ch "ws://localhost:3000/ws"))]
-      (js/console.log "Got message from server:" (pr-str (:message (<! ws))))))
+    (let [{:keys [ws-channel]} (<! (ws-ch "ws://localhost:3000/ws"))
+          {:keys [message]} (<! ws-channel)]
+      (js/console.log "Got message from server:" (pr-str message))))
 #+END_SRC
 		
-Errors in the web-socket channel are returned as a map with an
-=:error= key:
+Errors in the web-socket channel (i.e. if the server goes away) are
+returned as a map with an =:error= key:
 
 #+BEGIN_SRC clojure
   (go
-    (let [ws (<! (ws-ch "ws://localhost:3000/ws"))
-          {:keys [message error]} (<! ws)]
+    (let [{:keys [ws-channel]} (<! (ws-ch "ws://localhost:3000/ws"))
+          {:keys [message error]} (<! ws-channel)]
       (if error
         (js/console.log "Uh oh:" error)
         (js/console.log "Hooray! Message:" (pr-str message)))))
@@ -160,6 +164,6 @@ your help!
 
 ** License
 
-Copyright © 2013 James Henderson
+Copyright © 2013-2014 James Henderson
 
 Distributed under the Eclipse Public License, the same as Clojure.
