@@ -67,6 +67,9 @@ As of 0.3.0, you can pass a =:format= option, to pass messages over
 the channel as EDN (default), as raw strings, or JSON (0.3.1). Valid
 formats are =#{:edn :json :json-kw :str}=, defaulting to =:edn=.
 
+You can also checkout Jeff Rose's [[https://github.com/thinktopic/chord-fressian][chord-fressian]] library, which
+provides support for binary channels - thanks Jeff!
+
 #+BEGIN_SRC clojure
   (:require [cljs.core.async :as a])
   (ws-ch "ws://localhost:3000/ws"
