@@ -2,7 +2,7 @@
   (:require [cljs.core.async :as a :refer [chan <! >! put! close!]]
             [chord.channels :refer [read-from-ws! write-to-ws! bidi-ch]]
             [chord.format :refer [wrap-format]])
-  
+
   (:require-macros [cljs.core.async.macros :refer [go go-loop alt!]]))
 
 (defn- on-close [ws read-ch write-ch & [err-meta-channel]]
@@ -58,9 +58,9 @@
 
     (a/<! (ws-ch \"ws://127.0.0.1:6437\" {:read-ch (a/chan (a/sliding-buffer 10))
                                           :write-ch (a/chan (a/dropping-buffer 10))}))"
-  
+
   [ws-url & [{:keys [read-ch write-ch format]}]]
-  
+
   (let [web-socket (js/WebSocket. ws-url)
         {:keys [read-ch write-ch]} (-> {:read-ch (or read-ch (chan))
                                         :write-ch (or write-ch (chan))}
@@ -68,6 +68,7 @@
         open-ch (a/chan)
         close-ch (a/chan)]
 
+    (set! (.-binaryType web-socket) "arraybuffer")
     (read-from-ws! web-socket read-ch)
     (write-to-ws! web-socket write-ch)
 
