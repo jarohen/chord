@@ -1,4 +1,13 @@
 * Changes
+** 0.4.1
+
+The binary type of the channels now defaults to array buffers rather
+than a DOM blob object.
+
+See [[https://github.com/james-henderson/chord/pull/17][PR 17]] for more details.
+
+Thanks to [[https://github.com/rosejn][Jeff Rose]] for the PR! 
+
 ** 0.4.0
 
 Breaking change: Channel returned from =chord.client/ws-ch= now
