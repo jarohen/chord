@@ -1,5 +1,13 @@
 * Changes
-** 0.4.1
+** 0.4.x
+*** 0.4.2
+
+No breaking changes - bugfix from [[https://github.com/weavejester][James Reeves]] regarding passing
+options to =with-channel=. See [[https://github.com/james-henderson/chord/pull/19][PR 19]] for more details.
+
+Thanks James!
+
+*** 0.4.1
 
 The binary type of the channels now defaults to array buffers rather
 than a DOM blob object.
@@ -7,8 +15,7 @@ than a DOM blob object.
 See [[https://github.com/james-henderson/chord/pull/17][PR 17]] for more details.
 
 Thanks to [[https://github.com/rosejn][Jeff Rose]] for the PR! 
-
-** 0.4.0
+*** 0.4.0
 
 Breaking change: Channel returned from =chord.client/ws-ch= now
 returns a map; either ={:ws-channel ch}= or ={:error error}=, rather
@@ -24,7 +31,8 @@ Thanks to [[https://github.com/charles-dyfis-net][Charles Duffy]] for reporting 
 fixing a couple of other bugs, and generally for all of his help with
 this release.
 
-** 0.3.1
+** 0.3.x
+*** 0.3.1
 
 Added JSON support - you can now pass ={:format :json}= or
 ={:format :json-kw}= to the websocket constructors.
@@ -37,7 +45,7 @@ Thanks to [[https://github.com/michaelklishin][Michael Klishin]] and [[https://g
 Thanks also to [[https://github.com/giuliano108][Giuliano Cioffi]] for fixing a dependency issue in the
 example project.
 
-** 0.3.0
+*** 0.3.0
 
 Breaking change: defaulting to expecting EDN messages over the
 channel.
@@ -53,7 +61,8 @@ you pass ={:format :str}= to continue with the same behaviour as
 
 Thanks to [[https://github.com/eneroth][Henrik Eneroth]] for the discussion!
 
-** 0.2.2
+** 0.2.x
+*** 0.2.2
 
 No breaking changes. Adding in =wrap-websocket-handler= to provide an
 macro-less alternative to =with-channel=.
@@ -62,26 +71,27 @@ Thanks to [[https://github.com/malcolmsparks][Malcolm Sparks]] for the tip!
 
 Thanks also to [[https://github.com/rrichardson][Rick Richardson]] for his doc fix.
 
-** 0.2.1
+*** 0.2.1
 
 No breaking changes. Added ability to pass custom buffered channels to
 use instead of the default unbuffered channels.
 
 Thanks to [[https://github.com/timgluz][Timo Sulg (timgluz)]] for the PR!
 
-** 0.2.0
+*** 0.2.0
 
 Breaking change - CLJS namespace now =chord.client= due to recent
 versions of the CLJS compiler not liking single-segment namespaces
 
 Thanks to [[https://github.com/hadronzoo][Joshua Griffith (hadronzoo)]] for the PR!
 
-** 0.1.1
+** 0.1.x
+*** 0.1.1
 
 No breaking changes - added adapter around http-kit for Clojure
 support. 
 
-** 0.1.0
+*** 0.1.0
 
 Initial release.
 
