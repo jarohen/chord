@@ -4,18 +4,16 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.6.0"]
-                 [jarohen/chord "0.4.2"]
+                 [jarohen/chord "0.4.2-SNAPSHOT"]
 
                  [ring/ring-core "1.2.0"]
                  [compojure "1.1.5"]
                  [hiccup "1.0.4"]
 
                  [org.clojure/core.async "0.1.301.0-deb34a-alpha"]
-                 [org.clojure/clojurescript "0.0-2268"]
+                 [org.clojure/clojurescript "0.0-2280"]
 
-                 [prismatic/dommy "0.1.2"]
-
-                 [jarohen/clidget "0.2.0"]]
+                 [jarohen/flow "0.2.0-beta2"]]
 
   :plugins [[lein-pdo "0.1.1"]
             [jarohen/lein-frodo "0.3.2"]
@@ -35,7 +33,7 @@
   
   :resource-paths ["resources" "target/resources"]
 
-  :cljsbuild {:builds [{:source-paths ["src"]
+  :cljsbuild {:builds [{:source-paths ["src" "checkouts/chord/src" "checkouts/chord/target/generated/cljs"]
                         :compiler {:output-to "target/resources/js/chord-example.js"
                                    :optimizations :whitespace
                                    :pretty-print true}}]})

@@ -2,11 +2,9 @@
   (:require [chord.client :refer [ws-ch]]
             [chord.example.message-list :refer [message-component]]
             [cljs.core.async :refer [chan <! >! put! close! timeout]]
-            [dommy.core :as d]
             [cljs.reader :as edn]
-            [clidget.widget :refer-macros [defwidget]])
-  (:require-macros [cljs.core.async.macros :refer [go go-loop]]
-                   [dommy.macros :refer [node sel1]]))
+            [flow.core :as f :include-macros true])
+  (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
 (enable-console-print!)
 
@@ -37,13 +35,13 @@
 
             (if error
               ;; connection failed, print error
-              (d/replace-contents! (sel1 :#content)
-                                   (node
-                                    [:div
-                                     "Couldn't connect to websocket: "
-                                     (pr-str error)]))
+              (f/root js/document.body
+                (f/el
+                  [:div
+                   "Couldn't connect to websocket: "
+                   (pr-str error)]))
 
-              (let [;; !msgs is a shared atom between the model (above,
+              (let [ ;; !msgs is a shared atom between the model (above,
                     ;; handling the WS connection) and the view
                     ;; (message-component, handling how it's rendered)
                     !msgs (doto (atom [])
@@ -56,5 +54,6 @@
                                  (send-msgs! ws-channel))]
 
                 ;; show the message component
-                (d/replace-contents! (sel1 :#content) (message-component !msgs new-msg-ch))))))))
+                (f/root js/document.body
+                  (message-component !msgs new-msg-ch))))))))
 
