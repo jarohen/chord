@@ -3,6 +3,7 @@
             [chord.example.message-list :refer [message-component]]
             [cljs.core.async :refer [chan <! >! put! close! timeout]]
             [cljs.reader :as edn]
+            [clojure.string :as s]
             [flow.core :as f :include-macros true])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
@@ -29,6 +30,10 @@
 
 (set! (.-onload js/window)
       (fn []
+        (go
+          (prn (-> (<! (chord.ajax/get "/js/chord-example.js"))
+                   (update-in [:body] (comp first s/split-lines)))))
+        
         (go
           (let [{:keys [ws-channel error]} (<! (ws-ch "ws://localhost:3000/ws"
                                                       {:format :json-kw}))]
