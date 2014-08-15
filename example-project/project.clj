@@ -9,6 +9,7 @@
                  [ring/ring-core "1.2.0"]
                  [compojure "1.1.5"]
                  [hiccup "1.0.4"]
+                 [ring-middleware-format "0.4.0"]
 
                  [org.clojure/core.async "0.1.301.0-deb34a-alpha"]
                  [org.clojure/clojurescript "0.0-2280"]
@@ -18,7 +19,8 @@
   :plugins [[lein-pdo "0.1.1"]
             [jarohen/lein-frodo "0.3.2"]
             [lein-cljsbuild "1.0.3"]
-            [lein-shell "0.4.0"]]
+            [lein-shell "0.4.0"]
+            [jarohen/simple-brepl "0.1.1"]]
 
   :frodo/config-resource "chord-example.edn"
 

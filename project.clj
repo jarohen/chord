@@ -8,7 +8,8 @@
                  [org.clojure/core.async "0.1.301.0-deb34a-alpha"]
                  [http-kit "2.1.18"]
                  [org.clojure/tools.reader "0.8.3"]
-                 [cheshire "5.3.1"]]
+                 [cheshire "5.3.1"]
+                 [com.cemerick/url "0.1.1"]]
 
   :plugins [[com.keminglabs/cljx "0.3.2"]]
 

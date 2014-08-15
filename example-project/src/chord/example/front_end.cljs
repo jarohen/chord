@@ -4,7 +4,9 @@
             [cljs.core.async :refer [chan <! >! put! close! timeout]]
             [cljs.reader :as edn]
             [clojure.string :as s]
-            [flow.core :as f :include-macros true])
+            [flow.core :as f :include-macros true]
+            [chord.http :as ajax]
+            simple-brepl.client)
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
 (enable-console-print!)
@@ -31,8 +33,13 @@
 (set! (.-onload js/window)
       (fn []
         (go
-          (prn (-> (<! (chord.ajax/get "/js/chord-example.js"))
-                   (update-in [:body] (comp first s/split-lines)))))
+          (-> (<! (ajax/get "/ajax"
+                            {:query-params {:a 1 :b 2}
+                             :req-format :json-kw
+                             :body {:a 3 :b 4}
+                             :headers {:authorization "abc123"}}))
+              clj->js
+              js/console.log))
         
         (go
           (let [{:keys [ws-channel error]} (<! (ws-ch "ws://localhost:3000/ws"
