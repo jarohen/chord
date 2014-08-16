@@ -33,11 +33,11 @@
 (set! (.-onload js/window)
       (fn []
         (go
-          (-> (<! (ajax/get "/ajax"
-                            {:query-params {:a 1 :b 2}
-                             :req-format :json-kw
-                             :body {:a 3 :b 4}
-                             :headers {:authorization "abc123"}}))
+          (-> (<! (ajax/post "/ajax"
+                             {:query-params {:a 1 :b 2}
+                              :req-format :json-kw
+                              :body {:a 3 :b 4}
+                              :headers {:authorization "abc123"}}))
               clj->js
               js/console.log))
         

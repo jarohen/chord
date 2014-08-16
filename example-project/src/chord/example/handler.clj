@@ -1,6 +1,6 @@
 (ns chord.example.handler
   (:require [ring.util.response :refer [response]]
-            [compojure.core :refer [defroutes GET]]
+            [compojure.core :refer [defroutes GET ANY]]
             [compojure.route :refer [resources]]
             [chord.http-kit :refer [wrap-websocket-handler]]
             [clojure.core.async :refer [<! >! put! close! go-loop]]
@@ -30,10 +30,10 @@
   (GET "/" [] (response (page-frame)))
   (GET "/ws" [] (-> ws-handler
                     (wrap-websocket-handler {:format :json-kw})))
-  (GET "/ajax" []
+  (ANY "/ajax" []
     (-> (fn [{:keys [body-params] :as req}]
           (response {:you-said body-params
-                     :req (dissoc req :async-channel)}))
+                     :req (dissoc req :async-channel :body)}))
         
         (wrap-restful-format :formats [:edn :json-kw])))
 
