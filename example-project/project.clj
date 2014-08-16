@@ -10,6 +10,7 @@
                  [compojure "1.1.5"]
                  [hiccup "1.0.4"]
                  [ring-middleware-format "0.4.0"]
+                 [ring-basic-authentication "1.0.5"]
 
                  [org.clojure/core.async "0.1.301.0-deb34a-alpha"]
                  [org.clojure/clojurescript "0.0-2280"]

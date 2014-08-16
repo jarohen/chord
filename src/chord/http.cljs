@@ -5,6 +5,7 @@
             [clojure.string :as s]
             [goog.events :as e]
             [goog.net.EventType :as et]
+            [goog.crypt.base64 :as b64]
             [cemerick.url :refer [url]])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]])
   (:import [goog.net XhrIo]))
@@ -16,7 +17,7 @@
       s)))
 
 (defn full-url [url-or-path]
-  (let [default-protocol (subs js/location.protocol 0 (- (count js/location.protocol) 1))]
+  (let [default-protocol (subs js/location.protocol 0 (dec (count js/location.protocol)))]
     (-> (url url-or-path)
         (update-in [:protocol] (with-default default-protocol))
         (update-in [:host] (with-default js/location.hostname))
@@ -35,12 +36,20 @@
          [(keyword (s/lower-case k)) v])
        (into {})))
 
+(defn with-basic-auth [{:keys [basic-auth] :as req}]
+  (if-let [[user pass] basic-auth]
+    (-> req
+        (assoc-in [:headers :authorization] (str "Basic "
+                                                 (b64/encodeString (str user ":" pass)))))
+    req))
+
 (defn request [req]
   (let [resp-ch (a/chan)
         {:keys [xhr url method body headers]} (-> req
                                                   (assoc :xhr (goog.net.XhrIo.))
                                                   with-query-params
                                                   with-formatted-body
+                                                  with-basic-auth
                                                   with-headers)]
     (e/listen xhr et/COMPLETE
               (fn [e]

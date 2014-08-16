@@ -37,6 +37,7 @@
                              {:query-params {:a 1 :b 2}
                               :req-format :json-kw
                               :body {:a 3 :b 4}
+                              :basic-auth ["james" "password-123"]
                               :headers {:authorization "abc123"}}))
               clj->js
               js/console.log))

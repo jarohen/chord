@@ -6,7 +6,8 @@
             [clojure.core.async :refer [<! >! put! close! go-loop]]
             [hiccup.page :refer [html5 include-js]]
             [simple-brepl.service :refer [brepl-js]]
-            [ring.middleware.format :refer [wrap-restful-format]]))
+            [ring.middleware.format :refer [wrap-restful-format]]
+            [ring.middleware.basic-authentication :refer [wrap-basic-authentication]]))
 
 (defn page-frame []
   (html5
@@ -35,7 +36,10 @@
           (response {:you-said body-params
                      :req (dissoc req :async-channel :body)}))
         
-        (wrap-restful-format :formats [:edn :json-kw])))
+        (wrap-restful-format :formats [:edn :json-kw])
+        (wrap-basic-authentication #(do
+                                      (prn %&)
+                                      true))))
 
   (resources "/js" {:root "js"}))
 
