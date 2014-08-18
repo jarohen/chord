@@ -11,7 +11,7 @@
                  [cheshire "5.3.1"]
                  [com.cemerick/url "0.1.1"]]
 
-  :plugins [[com.keminglabs/cljx "0.3.2"]]
+  :plugins [[com.keminglabs/cljx "0.4.0"]]
 
   :hooks [cljx.hooks]
 
