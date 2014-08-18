@@ -62,7 +62,6 @@
                     (a/>! resp-ch resp)
                     (a/close! resp-ch)))))
 
-    (js/console.log body)
     (.send xhr url (s/upper-case (name method)) body headers)
     resp-ch))
 
