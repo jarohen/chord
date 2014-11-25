@@ -5,9 +5,13 @@
             #+clj [clojure.tools.reader.edn :as edn]
             #+cljs [cljs.reader :as edn]
 
+            [cognitect.transit :as transit]
+
             [clojure.walk :refer [keywordize-keys]]
 
             #+clj [cheshire.core :as json])
+
+  #+clj (:import (java.io ByteArrayOutputStream ByteArrayInputStream))
 
   #+cljs (:require-macros [cljs.core.async.macros :refer [go-loop]]))
 
@@ -46,6 +50,34 @@
 
 (defmethod wrap-format :str [chs _]
   chs)
+
+(defn- transit-write [x]
+  #+clj
+  (let [baos (ByteArrayOutputStream.)]
+    (transit/write (transit/writer baos :json) x)
+    (.toString baos))
+
+  #+cljs
+  (transit/write (transit/writer :json) x))
+
+(defn- transit-read [x]
+  #+clj
+  (-> x
+      .getBytes
+      ByteArrayInputStream.
+      (transit/reader :json)
+      transit/read)
+
+  #+cljs
+  (transit/read (transit/reader :json) x))
+
+(defmethod wrap-format :transit [{:keys [read-ch write-ch]} _]
+  (let [t-read-ch  (chan 1 (map (try-read transit-read)))
+        t-write-ch (chan 1 (map transit-write))]
+    (a/pipe read-ch  t-read-ch)
+    (a/pipe write-ch t-write-ch)
+    {:read-ch  t-read-ch
+     :write-ch t-write-ch}))
 
 (defmethod wrap-format nil [chs _]
   (wrap-format chs :edn))
