@@ -3,7 +3,7 @@
   :url "https://github.com/james-henderson/chord/example-project"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :dependencies [[org.clojure/clojure "1.6.0"]
+  :dependencies [[org.clojure/clojure "1.7.0-alpha4"]
                  [jarohen/chord "0.5.0-SNAPSHOT"]
 
                  [ring/ring-core "1.2.0"]
@@ -13,9 +13,9 @@
                  [ring-basic-authentication "1.0.5"]
 
                  [org.clojure/core.async "0.1.301.0-deb34a-alpha"]
-                 [org.clojure/clojurescript "0.0-2280"]
+                 [org.clojure/clojurescript "0.0-2371"]
 
-                 [jarohen/flow "0.2.0-beta2"]]
+                 [org.clojars.james-henderson/flow "0.3.0-SNAPSHOT"]]
 
   :plugins [[lein-pdo "0.1.1"]
             [jarohen/lein-frodo "0.3.2"]

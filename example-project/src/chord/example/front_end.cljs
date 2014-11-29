@@ -68,5 +68,6 @@
 
                 ;; show the message component
                 (f/root js/document.body
-                  (message-component !msgs new-msg-ch))))))))
+                  (f/el
+                    [message-component !msgs new-msg-ch]))))))))
 

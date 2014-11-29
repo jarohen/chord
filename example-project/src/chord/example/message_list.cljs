@@ -39,5 +39,5 @@
 (defn message-component [!msgs new-msg-ch]
   (f/el
     [:div
-     (message-box new-msg-ch)
-     (message-list !msgs)]))
+     [message-box new-msg-ch]
+     [message-list !msgs]]))
