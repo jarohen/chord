@@ -1,14 +1,18 @@
 (ns chord.example.handler
   (:require [ring.util.response :refer [response]]
-            [compojure.core :refer [defroutes GET]]
+            [compojure.core :refer [defroutes GET ANY]]
             [compojure.route :refer [resources]]
             [chord.http-kit :refer [wrap-websocket-handler]]
             [clojure.core.async :refer [<! >! put! close! go-loop]]
-            [hiccup.page :refer [html5 include-js]]))
+            [hiccup.page :refer [html5 include-js]]
+            [simple-brepl.service :refer [brepl-js]]
+            [ring.middleware.format :refer [wrap-restful-format]]
+            [ring.middleware.basic-authentication :refer [wrap-basic-authentication]]))
 
 (defn page-frame []
   (html5
    [:head
+    [:script (brepl-js)]
     [:title "Chord Example"]
     (include-js "/js/chord-example.js")]
    [:body [:div#content]]))
@@ -27,6 +31,16 @@
   (GET "/" [] (response (page-frame)))
   (GET "/ws" [] (-> ws-handler
                     (wrap-websocket-handler {:format :json-kw})))
+  (ANY "/ajax" []
+    (-> (fn [{:keys [body-params] :as req}]
+          (response {:you-said body-params
+                     :req (dissoc req :async-channel :body)}))
+        
+        (wrap-restful-format :formats [:edn :json-kw])
+        (wrap-basic-authentication #(do
+                                      (prn %&)
+                                      true))))
+
   (resources "/js" {:root "js"}))
 
 (def app
