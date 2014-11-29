@@ -30,7 +30,7 @@
 (defroutes app-routes
   (GET "/" [] (response (page-frame)))
   (GET "/ws" [] (-> ws-handler
-                    (wrap-websocket-handler {:format :json-kw})))
+                    (wrap-websocket-handler {:format :transit-json})))
   (ANY "/ajax" []
     (-> (fn [{:keys [body-params] :as req}]
           (response {:you-said body-params

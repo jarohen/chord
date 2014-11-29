@@ -1,54 +1,99 @@
 (ns chord.format
-  (:require #+clj [clojure.core.async :as a :refer [chan <! >! put! close! go-loop]]
-            #+cljs [cljs.core.async :as a :refer [chan put! close! <! >!]]
-
-            #+clj [clojure.tools.reader.edn :as edn]
+  (:require #+clj [clojure.tools.reader.edn :as edn]
             #+cljs [cljs.reader :as edn]
+
+            #+clj [clojure.core.async :as a]
+            #+cljs [cljs.core.async :as a]
+
+            [cognitect.transit :as transit]
 
             [clojure.walk :refer [keywordize-keys]]
 
             #+clj [cheshire.core :as json])
 
-  #+cljs (:require-macros [cljs.core.async.macros :refer [go-loop]]))
+  #+clj (:import (java.io ByteArrayOutputStream ByteArrayInputStream)))
 
-(defn try-read [read-fn]
-  (fn [{:keys [error message] :as data}]
-    (if error
-      data
+(defprotocol ChordFormatter
+  (freeze [_ obj])
+  (thaw [_ s]))
 
-      (try
-        {:message (read-fn message)}
-        (catch #+clj Exception, #+cljs js/Error e
-          {:error :invalid-format
-           :cause e
-           :invalid-msg message})))))
+(defmulti formatter* :format)
 
-(defmulti wrap-format
-  (fn [chs format]
-    format))
+(defmethod formatter* :edn [_]
+  (reify ChordFormatter
+    (freeze [_ obj]
+      (pr-str obj))
 
-(defmethod wrap-format :edn [{:keys [read-ch write-ch]} _]
-  {:read-ch (a/map< (try-read edn/read-string) read-ch)
-   :write-ch (a/map> pr-str write-ch)})
+    (thaw [_ s]
+      (edn/read-string s))))
 
-(defmethod wrap-format :json [{:keys [read-ch write-ch]} _]
-  {:read-ch (a/map< (try-read #+clj json/decode
-                              #+cljs (comp js->clj js/JSON.parse))
-                    read-ch)
-   
-   :write-ch (a/map> #+clj json/encode
-                     #+cljs (comp js/JSON.stringify clj->js)
-                     
-                     write-ch)})
+(defmethod formatter* :json [_]
+  (reify ChordFormatter
+    (freeze [_ obj]
+      #+clj (json/encode obj)
+      #+cljs (js/JSON.stringify (clj->js obj)))
 
-(defmethod wrap-format :json-kw [chs _]
-  (update-in (wrap-format chs :json) [:read-ch] #(a/map< keywordize-keys %)))
+    (thaw [this s]
+      #+clj (json/decode s)
+      #+cljs (js->clj (js/JSON.parse s)))))
 
-(defmethod wrap-format :str [chs _]
-  chs)
+(defmethod formatter* :json-kw [opts]
+  (let [json-formatter (formatter* (assoc opts :format :json))]
+    (reify ChordFormatter
+      (freeze [_ obj]
+        (freeze json-formatter obj))
+      
+      (thaw [_ s]
+        (keywordize-keys (thaw json-formatter s))))))
 
-(defmethod wrap-format nil [chs _]
-  (wrap-format chs :edn))
+(defmethod formatter* :transit-json [_]
+  (reify ChordFormatter
+    (freeze [_ obj]
+      #+clj
+      (let [baos (ByteArrayOutputStream.)]
+        (transit/write (transit/writer baos :json) obj)
+        (.toString baos))
 
-(defmethod wrap-format :default [chs format]
-  (throw (str "ERROR: Invalid Chord channel format: " format)))
+      #+cljs
+      (transit/write (transit/writer :json) obj))
+
+    (thaw [_ s]
+      #+clj
+      (let [bais (ByteArrayInputStream. (.getBytes s))]
+        (transit/read (transit/reader bais :json)))
+
+      #+cljs
+      (transit/read (transit/reader :json) s))))
+
+(defmethod formatter* :str [_]
+  (reify ChordFormatter
+    (freeze [_ obj]
+      obj)
+
+    (thaw [_ s]
+      s)))
+
+(defn formatter [opts]
+  (formatter* (if (keyword? opts)
+                {:format opts}
+                opts)))
+
+(defn wrap-format [{:keys [read-ch write-ch]} {:keys [format] :as opts}]
+  (let [fmtr (formatter (if format
+                          opts
+                          {:format :edn}))]
+
+    ;; TODO need to replace a/map< etc with transducers when 1.7.0 is
+    ;; released
+    
+    {:read-ch (a/map< (fn [{:keys [message]}]
+                        (try
+                          {:message (thaw fmtr message)}
+                          (catch #+clj Exception #+cljs js/Error e
+                                 {:error :invalid-format
+                                  :cause e
+                                  :invalid-msg message})))
+                      read-ch)
+
+     :write-ch (a/map> #(freeze fmtr %) write-ch)}))
+

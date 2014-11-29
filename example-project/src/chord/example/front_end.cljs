@@ -44,7 +44,7 @@
         
         (go
           (let [{:keys [ws-channel error]} (<! (ws-ch "ws://localhost:3000/ws"
-                                                      {:format :json-kw}))]
+                                                      {:format :transit-json}))]
 
             (if error
               ;; connection failed, print error
