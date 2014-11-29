@@ -13,7 +13,10 @@
                  [cheshire "5.3.1"]
 
                  [com.cognitect/transit-clj "0.8.259"]
-                 [com.cognitect/transit-cljs "0.8.192"]]
+                 [com.cognitect/transit-cljs "0.8.192"]
+
+                 [org.clojure/data.fressian "0.2.0"]
+                 [net.unit8/fressian-cljs "0.1.0"]]
 
   :plugins [[com.keminglabs/cljx "0.4.0"]]
 

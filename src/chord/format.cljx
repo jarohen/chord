@@ -1,17 +1,22 @@
 (ns chord.format
-  (:require #+clj [clojure.tools.reader.edn :as edn]
-            #+cljs [cljs.reader :as edn]
-
+  (:require #+clj [cheshire.core :as json]
+            
             #+clj [clojure.core.async :as a]
             #+cljs [cljs.core.async :as a]
+            
+            #+clj [clojure.java.io :as io]
 
-            [cognitect.transit :as transit]
-
+            #+clj [clojure.tools.reader.edn :as edn]
+            #+cljs [cljs.reader :as edn]
+            
             [clojure.walk :refer [keywordize-keys]]
+            [cognitect.transit :as transit]
+            
+            #+clj [clojure.data.fressian :as fressian]
+            #+cljs [fressian-cljs.core :as fressian])
 
-            #+clj [cheshire.core :as json])
-
-  #+clj (:import (java.io ByteArrayOutputStream ByteArrayInputStream)))
+  #+clj (:import [java.io ByteArrayOutputStream ByteArrayInputStream]
+                 [org.fressian.impl ByteBufferInputStream]))
 
 (defprotocol ChordFormatter
   (freeze [_ obj])
@@ -65,6 +70,15 @@
       #+cljs
       (transit/read (transit/reader :json) s))))
 
+(defmethod formatter* :fressian [_]
+  (reify ChordFormatter
+    (freeze [_ obj]
+      #+clj (ByteBufferInputStream. (fressian/write obj))
+      #+cljs (fressian/write obj))
+
+    (thaw [_ s]
+      (fressian/read s))))
+
 (defmethod formatter* :str [_]
   (reify ChordFormatter
     (freeze [_ obj]
@@ -96,4 +110,3 @@
                       read-ch)
 
      :write-ch (a/map> #(freeze fmtr %) write-ch)}))
-
