@@ -1,4 +1,4 @@
-(defproject jarohen/chord "0.4.2"
+(defproject jarohen/chord "0.5.0"
   :description "A library to bridge the gap between CLJ/CLJS, web-sockets and core.async"
   :url "https://github.com/james-henderson/chord.git"
   :license {:name "Eclipse Public License"
@@ -8,9 +8,17 @@
                  [org.clojure/core.async "0.1.301.0-deb34a-alpha"]
                  [http-kit "2.1.18"]
                  [org.clojure/tools.reader "0.8.3"]
-                 [cheshire "5.3.1"]]
 
-  :plugins [[com.keminglabs/cljx "0.3.2"]]
+                 [com.cemerick/url "0.1.1"]
+                 [cheshire "5.3.1"]
+
+                 [com.cognitect/transit-clj "0.8.259"]
+                 [com.cognitect/transit-cljs "0.8.192"]
+
+                 [org.clojure/data.fressian "0.2.0"]
+                 [net.unit8/fressian-cljs "0.1.0"]]
+
+  :plugins [[com.keminglabs/cljx "0.4.0"]]
 
   :hooks [cljx.hooks]
 

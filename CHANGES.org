@@ -1,4 +1,26 @@
 * Changes
+** 0.5.x
+
+From a Chord end user's point of view, no breaking changes.
+
+The 'parsing/formatting' implementation has changed, and there is no
+longer a =wrap-format= multi-method. This was removed in favour of a
+=ChordFormatter= protocol which is now used for both WebSockets and
+AJAX, and is decoupled from the channel implementation used in the
+previous WebSockets implementation.
+
+Thanks to [[https://github.com/lsnape][Luke Snape]], [[https://github.com/rosejn][Jeff Rose]] and [[https://github.com/tgetgood][Thomas Getgood]] for their help
+implementing the various formats.
+
+As a result, Jeff's 'chord-fressian' library, and Luke's
+'chord-transit' library, have been merged into Chord - there's no need
+to import these separately (and, indeed, they are no longer compatible
+with this release).
+
+Chord now supports AJAX requests, see the README for more details.
+
+Thanks also to Luke for his help in testing this release.
+
 ** 0.4.x
 *** 0.4.2
 

@@ -59,12 +59,12 @@
     (a/<! (ws-ch \"ws://127.0.0.1:6437\" {:read-ch (a/chan (a/sliding-buffer 10))
                                           :write-ch (a/chan (a/dropping-buffer 10))}))"
 
-  [ws-url & [{:keys [read-ch write-ch format]}]]
+  [ws-url & [{:keys [read-ch write-ch format] :as opts}]]
 
   (let [web-socket (js/WebSocket. ws-url)
         {:keys [read-ch write-ch]} (-> {:read-ch (or read-ch (chan))
                                         :write-ch (or write-ch (chan))}
-                                       (wrap-format format))
+                                       (wrap-format opts))
         open-ch (a/chan)
         close-ch (a/chan)]
 

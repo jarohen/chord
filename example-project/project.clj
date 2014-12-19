@@ -3,24 +3,27 @@
   :url "https://github.com/james-henderson/chord/example-project"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :dependencies [[org.clojure/clojure "1.6.0"]
-                 [jarohen/chord "0.4.2"]
+  :dependencies [[org.clojure/clojure "1.7.0-alpha4"]
+                 [jarohen/chord "0.5.0"]
 
                  [ring/ring-core "1.2.0"]
                  [compojure "1.1.5"]
                  [hiccup "1.0.4"]
+                 [ring-middleware-format "0.4.0"]
+                 [ring-basic-authentication "1.0.5"]
 
                  [org.clojure/core.async "0.1.301.0-deb34a-alpha"]
-                 [org.clojure/clojurescript "0.0-2268"]
+                 [org.clojure/clojurescript "0.0-2371"]
 
-                 [prismatic/dommy "0.1.2"]
-
-                 [jarohen/clidget "0.2.0"]]
+                 [jarohen/flow "0.3.0-alpha1"]]
 
   :plugins [[lein-pdo "0.1.1"]
-            [jarohen/lein-frodo "0.3.2"]
+            [jarohen/lein-frodo "0.4.1"]
             [lein-cljsbuild "1.0.3"]
-            [lein-shell "0.4.0"]]
+            [lein-shell "0.4.0"]
+            [jarohen/simple-brepl "0.1.2"]]
+
+  :exclusions [org.clojure/clojure]
 
   :frodo/config-resource "chord-example.edn"
 
@@ -35,7 +38,7 @@
   
   :resource-paths ["resources" "target/resources"]
 
-  :cljsbuild {:builds [{:source-paths ["src"]
+  :cljsbuild {:builds [{:source-paths ["src" "checkouts/chord/src" "checkouts/chord/target/generated/cljs"]
                         :compiler {:output-to "target/resources/js/chord-example.js"
                                    :optimizations :whitespace
                                    :pretty-print true}}]})

@@ -2,11 +2,12 @@
   (:require [chord.client :refer [ws-ch]]
             [chord.example.message-list :refer [message-component]]
             [cljs.core.async :refer [chan <! >! put! close! timeout]]
-            [dommy.core :as d]
             [cljs.reader :as edn]
-            [clidget.widget :refer-macros [defwidget]])
-  (:require-macros [cljs.core.async.macros :refer [go go-loop]]
-                   [dommy.macros :refer [node sel1]]))
+            [clojure.string :as s]
+            [flow.core :as f :include-macros true]
+            [chord.http :as ajax]
+            simple-brepl.client)
+  (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
 (enable-console-print!)
 
@@ -32,18 +33,28 @@
 (set! (.-onload js/window)
       (fn []
         (go
+          (-> (<! (ajax/post "/ajax"
+                             {:query-params {:a 1 :b 2}
+                              :req-format :json-kw
+                              :body {:a 3 :b 4}
+                              :basic-auth ["james" "password-123"]
+                              :headers {:authorization "abc123"}}))
+              clj->js
+              js/console.log))
+        
+        (go
           (let [{:keys [ws-channel error]} (<! (ws-ch "ws://localhost:3000/ws"
-                                                      {:format :json-kw}))]
+                                                      {:format :transit-json}))]
 
             (if error
               ;; connection failed, print error
-              (d/replace-contents! (sel1 :#content)
-                                   (node
-                                    [:div
-                                     "Couldn't connect to websocket: "
-                                     (pr-str error)]))
+              (f/root js/document.body
+                (f/el
+                  [:div
+                   "Couldn't connect to websocket: "
+                   (pr-str error)]))
 
-              (let [;; !msgs is a shared atom between the model (above,
+              (let [ ;; !msgs is a shared atom between the model (above,
                     ;; handling the WS connection) and the view
                     ;; (message-component, handling how it's rendered)
                     !msgs (doto (atom [])
@@ -56,5 +67,7 @@
                                  (send-msgs! ws-channel))]
 
                 ;; show the message component
-                (d/replace-contents! (sel1 :#content) (message-component !msgs new-msg-ch))))))))
+                (f/root js/document.body
+                  (f/el
+                    [message-component !msgs new-msg-ch]))))))))
 
