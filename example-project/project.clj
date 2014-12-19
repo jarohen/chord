@@ -15,13 +15,15 @@
                  [org.clojure/core.async "0.1.301.0-deb34a-alpha"]
                  [org.clojure/clojurescript "0.0-2371"]
 
-                 [org.clojars.james-henderson/flow "0.3.0-SNAPSHOT"]]
+                 [jarohen/flow "0.3.0-alpha1"]]
 
   :plugins [[lein-pdo "0.1.1"]
-            [jarohen/lein-frodo "0.3.2"]
+            [jarohen/lein-frodo "0.4.1"]
             [lein-cljsbuild "1.0.3"]
             [lein-shell "0.4.0"]
-            [jarohen/simple-brepl "0.1.1"]]
+            [jarohen/simple-brepl "0.1.2"]]
+
+  :exclusions [org.clojure/clojure]
 
   :frodo/config-resource "chord-example.edn"
 
