@@ -1,15 +1,21 @@
 * Chord
 
 A lightweight Clojure/ClojureScript library designed to bridge the gap
-between the triad of CLJ/CLJS, web-sockets and core.async.
+between the triad of CLJ/CLJS, web-sockets and core.async. In
+addition, Chord also now supports AJAX requests.
 
 ** Usage
 
 Include the following in your =project.clj=:
 
 #+BEGIN_SRC clojure
-  [jarohen/chord "0.4.2"]
+  [jarohen/chord "0.5.0"]
 #+END_SRC
+
+Chord now supports EDN, JSON, Transit and Fressian out of the box -
+please remove dependencies to 'chord-fressian' and 'chord-transit' if
+you have them. Thanks to [[https://github.com/lsnape][Luke Snape]], [[https://github.com/rosejn][Jeff Rose]] and [[https://github.com/tgetgood][Thomas Getgood]] for
+their help supporting these formats!
 
 *** Example project
 
@@ -158,6 +164,41 @@ You can pass custom channels to =wrap-websocket-handler= as a second
                     (wrap-websocket-handler {:read-ch ...}))
                 {:port 3000})
 #+END_SRC
+
+*** AJAX support
+Chord now supports basic AJAX requests as well, in the same, simple
+core.async'y style:
+
+#+BEGIN_SRC clojure
+  (ns ...
+    (:require [chord.http :as http]
+              [cljs.core.async :as a])
+    (:require-macros [cljs.core.async.macros :refer [go]]))
+
+  (go
+    (let [resp (a/<! (http/get "/api/endpoint"
+                               {:query-params {...}
+                                :headers {...}
+                                :basic-auth ["user" "pass"]
+                                :body ...
+                                :req-format :edn
+                                :resp-format :edn}))
+
+          {:keys [status headers body]} resp]
+      
+      ...))
+#+END_SRC
+
+A call to =http/get=, =http/post=, etc return a channel of one value -
+a map containing =:status=, =:body= and =:headers= keys. Chord will
+format the request and response bodies according to the =:req-format=
+and =:resp-format= keys respectively (and tries to guess the latter
+according to the Content-Type header if =:resp-format= is not
+provided). 
+
+Chord's support for AJAX is only an initial implementation, for now -
+please let me know of any feature you'd like to see/bugs in the usual Github
+way!
 
 ** Bug reports/pull requests/comments/suggestions etc?
 
