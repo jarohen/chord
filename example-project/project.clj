@@ -38,7 +38,7 @@
   
   :resource-paths ["resources" "target/resources"]
 
-  :cljsbuild {:builds [{:source-paths ["src" "checkouts/chord/src" "checkouts/chord/target/generated/cljs"]
+  :cljsbuild {:builds [{:source-paths ["src"]
                         :compiler {:output-to "target/resources/js/chord-example.js"
                                    :optimizations :whitespace
                                    :pretty-print true}}]})
