@@ -1,5 +1,15 @@
 * Changes
+** 0.6.x
+
+*** 0.6.0
+
+Breaking change: Fressian seems to be broken, so I've moved the binary
+support out to =chord.format.binary=, which users now need to require
+if they need binary support.
+
 ** 0.5.x
+
+*** 0.5.0
 
 From a Chord end user's point of view, no breaking changes.
 
