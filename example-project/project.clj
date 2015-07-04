@@ -6,7 +6,7 @@
   :dependencies [[org.clojure/clojure "1.7.0"]
                  [org.clojure/tools.reader "0.9.2"]
 
-                 [jarohen/chord "0.6.1-SNAPSHOT"]
+                 [jarohen/chord "0.6.0"]
 
                  [ring/ring-core "1.3.2"]
                  [compojure "1.3.4"]
@@ -21,7 +21,8 @@
                  [jarohen/yoyo.system "0.0.1-20150704.122931-4"]
                  [jarohen/yoyo.cljs "0.0.3"]
                  [jarohen/yoyo.http-kit "0.0.2"]
-                 [jarohen/embed-nrepl "0.1.1"]]
+                 [jarohen/embed-nrepl "0.1.1"]
+                 [danlentz/clj-uuid "0.1.6"]]
 
   :exclusions [org.clojure/clojure
                org.clojure/clojurescript]
@@ -33,4 +34,6 @@
   :source-paths ["src"]
 
   :profiles {:dev {:dependencies [[org.clojure/clojurescript "0.0-3308"]
-                                  [reagent "0.5.0"]]}})
+                                  [reagent "0.5.0"]
+                                  [weasel "0.7.0"]
+                                  [com.cemerick/piggieback "0.2.1"]]}})

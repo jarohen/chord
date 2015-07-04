@@ -22,8 +22,8 @@
            :pretty-print? false
            :classpath-prefix "js"}})
 
-(defn with-web-server [app f]
-  (http-kit/with-webserver {:handler (make-handler app)
+(defn with-web-server [{:keys [handler]} f]
+  (http-kit/with-webserver {:handler handler
                             :port 3000}
     f))
 
@@ -33,10 +33,12 @@
 (def make-system
   (-> (ys/make-system (fn []
                         {:cljs-opts cljs-opts
+                         :handler (-> make-handler
+                                      (ys/using {:cljs-compiler [:cljs-compiler]}))
                          :cljs-compiler (-> with-cljs-compiler
                                             (ys/using {:cljs-opts [:cljs-opts]}))
                          :web-server (-> with-web-server
-                                         (ys/using {:cljs-compiler [:cljs-compiler]}))}))
+                                         (ys/using {:handler [:handler]}))}))
       (ys/with-system-put-to 'user/system)))
 
 (defn -main []

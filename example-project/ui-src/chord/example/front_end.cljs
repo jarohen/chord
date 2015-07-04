@@ -5,10 +5,12 @@
             [cljs.reader :as edn]
             [clojure.string :as s]
             [reagent.core :as r]
-            [chord.http :as ajax])
+            [chord.http :as ajax]
+            [nrepl.embed :refer [connect-brepl!]])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
 (enable-console-print!)
+(connect-brepl!)
 
 (defn add-msg [msgs new-msg]
   ;; we keep the most recent 10 messages
@@ -18,9 +20,14 @@
 (defn receive-msgs! [!msgs server-ch]
   ;; every time we get a message from the server, add it to our list
   (go-loop []
-    (when-let [msg (<! server-ch)]
-      (swap! !msgs add-msg msg)
-      (recur))))
+    (let [{:keys [message error] :as msg} (<! server-ch)]
+      (swap! !msgs add-msg (cond
+                             error {:error error}
+                             (nil? message) {:type :connection-closed}
+                             message message))
+
+      (when message
+        (recur)))))
 
 (defn send-msgs! [new-msg-ch server-ch]
   ;; send all the messages to the server
