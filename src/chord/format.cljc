@@ -89,11 +89,14 @@
 
     {:read-ch (a/map< (fn [{:keys [message]}]
                         (try
-                          {:message (thaw fmtr message)}
+                          (when message
+                            {:message (thaw fmtr message)})
                           (catch #?(:clj Exception, :cljs js/Error) e
                                  {:error :invalid-format
                                   :cause e
                                   :invalid-msg message})))
                       read-ch)
 
-     :write-ch (a/map> #(freeze fmtr %) write-ch)}))
+     :write-ch (a/map> #(when %
+                          (freeze fmtr %))
+                       write-ch)}))
