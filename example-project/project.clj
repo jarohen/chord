@@ -6,7 +6,7 @@
   :dependencies [[org.clojure/clojure "1.7.0"]
                  [org.clojure/tools.reader "0.9.2"]
 
-                 [jarohen/chord "0.6.0"]
+                 [jarohen/chord "0.7.0-SNAPSHOT"]
 
                  [ring/ring-core "1.3.2"]
                  [compojure "1.3.4"]
