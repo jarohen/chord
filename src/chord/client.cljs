@@ -5,34 +5,6 @@
 
   (:require-macros [cljs.core.async.macros :refer [go go-loop alt!]]))
 
-(defn- on-close [ws read-ch write-ch & [err-meta-channel]]
-  (set! (.-onclose ws)
-        (fn [ev]
-          (go
-            (let [error-seen? (.-error-seen ws)]
-              (when (or error-seen?
-                        (not (.-wasClean ev)))
-                (let [error-desc {:error (.-reason ev)
-                                  :code (.-code ev)
-                                  :wasClean (.-wasClean ev)}]
-                  (when err-meta-channel
-                    (>! err-meta-channel
-                        (bidi-ch
-                         (go error-desc)
-                         (doto (chan) (close!)))))
-                  (>! read-ch error-desc)))
-              (close! read-ch)
-              (close! write-ch))))))
-
-(defn- make-open-ch [ws read-ch write-ch v]
-  (let [ch (chan)]
-    (on-close ws read-ch write-ch ch)
-    (set! (.-onopen ws)
-          #(go
-             (>! ch v)
-             (close! ch)))
-    ch))
-
 (defn close-event->maybe-error [ev]
   (when-not (.-wasClean ev)
     {:reason (.-reason ev)
