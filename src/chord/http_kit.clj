@@ -19,8 +19,9 @@
     (read-from-ws! httpkit-ch read-ch)
     (write-to-ws! httpkit-ch write-ch)
     (on-close httpkit-ch read-ch write-ch)
-    
-    (bidi-ch read-ch write-ch {:on-close #(http/close httpkit-ch)})))
+
+    (bidi-ch read-ch write-ch {:on-close #(when (http/open? httpkit-ch)
+                                            (http/close httpkit-ch))})))
 
 (defmacro with-channel
   "Extracts the websocket from the request and binds it to 'ch-name' in the body
