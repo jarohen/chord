@@ -1,18 +1,19 @@
 (ns chord.example.handler
-  (:require [ring.util.response :refer [response]]
-            [compojure.core :refer [defroutes GET ANY]]
+  (:require [yoyo.cljs :as cljs]
+            [ring.util.response :refer [response]]
+            [compojure.core :refer [routes GET ANY]]
             [compojure.route :refer [resources]]
             [chord.http-kit :refer [wrap-websocket-handler]]
-            [clojure.core.async :refer [<! >! put! close! go-loop]]
+            [clojure.core.async :refer [<! >! put! close! go go-loop timeout]]
             [hiccup.page :refer [html5 include-js]]
             [ring.middleware.format :refer [wrap-restful-format]]
             [ring.middleware.basic-authentication :refer [wrap-basic-authentication]]))
 
-(defn page-frame []
+(defn page-frame [{:keys [cljs-compiler]}]
   (html5
    [:head
     [:title "Chord Example"]
-    (include-js "/js/chord-example.js")]
+    (include-js (cljs/path-for-js cljs-compiler))]
    [:body [:div#content]]))
 
 (defn ws-handler [{:keys [ws-channel] :as req}]
@@ -25,21 +26,19 @@
                        {:received (format "You passed: '%s' at %s." (pr-str message) (java.util.Date.))}))
       (recur))))
 
-(defroutes app-routes
-  (GET "/" [] (response (page-frame)))
-  (GET "/ws" [] (-> ws-handler
-                    (wrap-websocket-handler {:format :transit-json})))
-  (ANY "/ajax" []
-    (-> (fn [{:keys [body-params] :as req}]
-          (response {:you-said body-params
-                     :req (dissoc req :async-channel :body)}))
+(defn make-handler [{:keys [cljs-compiler] :as app}]
+  (routes
+    (GET "/" [] (response (page-frame app)))
+    (GET "/ws" [] (-> ws-handler
+                      (wrap-websocket-handler {:format :transit-json})))
+    (ANY "/ajax" []
+      (-> (fn [{:keys [body-params] :as req}]
+            (response {:you-said body-params
+                       :req (dissoc req :async-channel :body)}))
 
-        (wrap-restful-format :formats [:edn :json-kw])
-        (wrap-basic-authentication #(do
-                                      (prn %&)
-                                      true))))
+          (wrap-restful-format :formats [:edn :json-kw])
+          (wrap-basic-authentication #(do
+                                        (prn %&)
+                                        true))))
 
-  (resources "/js" {:root "js"}))
-
-(def app
-  #'app-routes)
+    (cljs/cljs-handler cljs-compiler)))
