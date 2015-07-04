@@ -3,25 +3,26 @@
   :url "https://github.com/james-henderson/chord/example-project"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :dependencies [[org.clojure/clojure "1.7.0-alpha4"]
+  :dependencies [[org.clojure/clojure "1.7.0"]
+                 [org.clojure/tools.reader "0.9.2"]
+
                  [jarohen/chord "0.6.0"]
 
-                 [ring/ring-core "1.2.0"]
-                 [compojure "1.1.5"]
-                 [hiccup "1.0.4"]
-                 [ring-middleware-format "0.4.0"]
+                 [ring/ring-core "1.3.2"]
+                 [compojure "1.3.4"]
+                 [hiccup "1.0.5"]
+                 [ring-middleware-format "0.5.0"]
                  [ring-basic-authentication "1.0.5"]
 
                  [org.clojure/core.async "0.1.346.0-17112a-alpha"]
-                 [org.clojure/clojurescript "0.0-2727"]
+                 [org.clojure/clojurescript "0.0-3308"]
 
-                 [jarohen/flow "0.3.0-alpha3"]]
+                 [reagent "0.5.0"]]
 
   :plugins [[lein-pdo "0.1.1"]
             [jarohen/lein-frodo "0.4.1"]
             [lein-cljsbuild "1.0.3"]
-            [lein-shell "0.4.0"]
-            [jarohen/simple-brepl "0.2.1"]]
+            [lein-shell "0.4.0"]]
 
   :exclusions [org.clojure/clojure]
 
@@ -35,7 +36,7 @@
                     "frodo"]]}
 
   :source-paths ["src"]
-  
+
   :resource-paths ["resources" "target/resources"]
 
   :cljsbuild {:builds [{:source-paths ["src"]

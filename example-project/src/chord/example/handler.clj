@@ -5,14 +5,12 @@
             [chord.http-kit :refer [wrap-websocket-handler]]
             [clojure.core.async :refer [<! >! put! close! go-loop]]
             [hiccup.page :refer [html5 include-js]]
-            [simple-brepl.service :refer [brepl-js]]
             [ring.middleware.format :refer [wrap-restful-format]]
             [ring.middleware.basic-authentication :refer [wrap-basic-authentication]]))
 
 (defn page-frame []
   (html5
    [:head
-    [:script (brepl-js)]
     [:title "Chord Example"]
     (include-js "/js/chord-example.js")]
    [:body [:div#content]]))
@@ -35,7 +33,7 @@
     (-> (fn [{:keys [body-params] :as req}]
           (response {:you-said body-params
                      :req (dissoc req :async-channel :body)}))
-        
+
         (wrap-restful-format :formats [:edn :json-kw])
         (wrap-basic-authentication #(do
                                       (prn %&)

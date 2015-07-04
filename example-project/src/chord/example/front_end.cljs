@@ -4,9 +4,8 @@
             [cljs.core.async :refer [chan <! >! put! close! timeout]]
             [cljs.reader :as edn]
             [clojure.string :as s]
-            [flow.core :as f :include-macros true]
-            [chord.http :as ajax]
-            simple-brepl.client)
+            [reagent.core :as r]
+            [chord.http :as ajax])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
 (enable-console-print!)
@@ -41,23 +40,23 @@
                               :headers {:authorization "abc123"}}))
               clj->js
               js/console.log))
-        
+
         (go
           (let [{:keys [ws-channel error]} (<! (ws-ch "ws://localhost:3000/ws"
                                                       {:format :transit-json}))]
 
             (if error
               ;; connection failed, print error
-              (f/root js/document.body
-                (f/el
-                  [:div
-                   "Couldn't connect to websocket: "
-                   (pr-str error)]))
+              (r/render-component
+               [:div
+                "Couldn't connect to websocket: "
+                (pr-str error)]
+               js/document.body)
 
               (let [ ;; !msgs is a shared atom between the model (above,
                     ;; handling the WS connection) and the view
                     ;; (message-component, handling how it's rendered)
-                    !msgs (doto (atom [])
+                    !msgs (doto (r/atom [])
                             (receive-msgs! ws-channel))
 
                     ;; new-msg-ch is the feedback loop from the view -
@@ -67,7 +66,6 @@
                                  (send-msgs! ws-channel))]
 
                 ;; show the message component
-                (f/root js/document.body
-                  (f/el
-                    [message-component !msgs new-msg-ch]))))))))
-
+                (r/render-component
+                 [message-component !msgs new-msg-ch]
+                 js/document.body)))))))
