@@ -26,19 +26,11 @@
                        {:received (format "You passed: '%s' at %s." (pr-str message) (java.util.Date.))}))
       (recur))))
 
-(defn make-handler [{:keys [cljs-compiler] :as app}]
-  (routes
-    (GET "/" [] (response (page-frame app)))
-    (GET "/ws" [] (-> ws-handler
-                      (wrap-websocket-handler {:format :transit-json})))
-    (ANY "/ajax" []
-      (-> (fn [{:keys [body-params] :as req}]
-            (response {:you-said body-params
-                       :req (dissoc req :async-channel :body)}))
+(defn make-handler [{:keys [cljs-compiler] :as app} f]
+  (let [chat-ch (a/chan)]
+    (routes
+      (GET "/" [] (response (page-frame app)))
+      (GET "/ws" [] (-> ws-handler
+                        (wrap-websocket-handler {:format :transit-json})))
 
-          (wrap-restful-format :formats [:edn :json-kw])
-          (wrap-basic-authentication #(do
-                                        (prn %&)
-                                        true))))
-
-    (cljs/cljs-handler cljs-compiler)))
+      (cljs/cljs-handler cljs-compiler))))

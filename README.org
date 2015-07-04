@@ -56,7 +56,7 @@ Messages that come from the server are received as a map with a
           {:keys [message]} (<! ws-channel)]
       (js/console.log "Got message from server:" (pr-str message))))
 #+END_SRC
-		
+
 Errors in the web-socket channel (i.e. if the server goes away) are
 returned as a map with an =:error= key:
 
@@ -81,7 +81,7 @@ in addition to the usual Chord namespaces)
   (:require [cljs.core.async :as a])
   (ws-ch "ws://localhost:3000/ws"
          {:format :json-kw})
-#+END_SRC		
+#+END_SRC
 
 As of 0.2.1, you can configure the buffering of the channel by
 (optionally) passing custom read/write channels, as follows:
@@ -113,7 +113,7 @@ Chord's =with-channel= is used as follows:
 #+BEGIN_SRC clojure
   (:require [chord.http-kit :refer [with-channel]]
             [clojure.core.async :refer [<! >! put! close! go]])
-  
+
   (defn your-handler [req]
     (with-channel req ws-ch
       (go
@@ -128,7 +128,7 @@ channels as well:
 
 #+BEGIN_SRC clojure
   (require '[clojure.core.async :as a])
-  
+
   (defn your-handler [req]
     (with-channel req ws-ch
       {:read-ch (a/chan (a/dropping-buffer 10))
@@ -146,14 +146,14 @@ put a =:ws-channel= key in the request map:
 #+BEGIN_SRC clojure
   (require '[chord.http-kit :refer [wrap-websocket-handler]]
            '[clojure.core.async :as a])
-  
+
   (defn your-handler [{:keys [ws-channel] :as req}]
     (go
       (let [{:keys [message]} (<! ws-channel)]
         (println "Message received:" message)
         (>! ws-channel "Hello client from server!")
         (close! ws-channel))))
-  
+
   (start-server (-> #'your-handler wrap-websocket-handler) {:port 3000})
 #+END_SRC
 
@@ -166,41 +166,6 @@ You can pass custom channels to =wrap-websocket-handler= as a second
                 {:port 3000})
 #+END_SRC
 
-*** AJAX support
-Chord now supports basic AJAX requests as well, in the same, simple
-core.async'y style:
-
-#+BEGIN_SRC clojure
-  (ns ...
-    (:require [chord.http :as http]
-              [cljs.core.async :as a])
-    (:require-macros [cljs.core.async.macros :refer [go]]))
-
-  (go
-    (let [resp (a/<! (http/get "/api/endpoint"
-                               {:query-params {...}
-                                :headers {...}
-                                :basic-auth ["user" "pass"]
-                                :body ...
-                                :req-format :edn
-                                :resp-format :edn}))
-
-          {:keys [status headers body]} resp]
-      
-      ...))
-#+END_SRC
-
-A call to =http/get=, =http/post=, etc return a channel of one value -
-a map containing =:status=, =:body= and =:headers= keys. Chord will
-format the request and response bodies according to the =:req-format=
-and =:resp-format= keys respectively (and tries to guess the latter
-according to the Content-Type header if =:resp-format= is not
-provided). 
-
-Chord's support for AJAX is only an initial implementation, for now -
-please let me know of any feature you'd like to see/bugs in the usual Github
-way!
-
 ** Bug reports/pull requests/comments/suggestions etc?
 
 Yes please! Please submit these in the traditional GitHub manner.
@@ -212,6 +177,6 @@ your help!
 
 ** License
 
-Copyright © 2013-2014 James Henderson
+Copyright © 2013-2015 James Henderson
 
 Distributed under the Eclipse Public License, the same as Clojure.
