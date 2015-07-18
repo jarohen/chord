@@ -5,7 +5,7 @@
             [cljs.reader :as edn]
             [clojure.string :as s]
             [reagent.core :as r]
-            [chord.http :as ajax]
+            ;[chord.http :as ajax]
             [nrepl.embed :refer [connect-brepl!]])
   (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
