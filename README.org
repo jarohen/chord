@@ -27,6 +27,8 @@ page.
 You can run it with =lein dev= - an alias that starts up an http-kit
 server using [[https://github.com/james-henderson/lein-frodo][Frodo]] and automatically re-compiles the CLJS.
 
+Once it is running - navigate to [[http://localhost:3000/]] and you should see =Send a message to the server:=
+
 *** ClojureScript
 
 *Chord* only has one function, =chord.client/ws-ch=, which takes a
