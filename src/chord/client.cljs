@@ -2,7 +2,6 @@
   (:require [cljs.core.async :as a :refer [chan <! >! put! close!]]
             [chord.channels :refer [read-from-ws! write-to-ws! bidi-ch]]
             [chord.format :refer [wrap-format]])
-
   (:require-macros [cljs.core.async.macros :refer [go go-loop alt!]]))
 
 (defn close-event->maybe-error [ev]

@@ -73,10 +73,10 @@ returned as a map with an =:error= key:
 
 As of 0.3.0, you can pass a =:format= option, to pass messages over
 the channel as EDN (default), as raw strings, or JSON (0.3.1). Valid
-formats are =#{:edn :json :json-kw :str :binary :transit-json}=,
+formats are =#{:edn :json :json-kw :str :fressian :transit-json}=,
 defaulting to =:edn=.
 
-(If you do use binary, you'll need to require =chord.format.binary=,
+(If you do use fressian, you'll need to require =chord.format.fressian=,
 in addition to the usual Chord namespaces)
 
 #+BEGIN_SRC clojure
