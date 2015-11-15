@@ -15,5 +15,5 @@
                  [com.cognitect/transit-clj "0.8.275"]
                  [com.cognitect/transit-cljs "0.8.220"]
 
-                 [org.clojure/data.fressian "0.2.0"]
-                 [net.unit8/fressian-cljs "0.1.0"]])
+                 [org.clojure/data.fressian "0.2.1"]
+                 [net.unit8/fressian-cljs "0.2.0"]])
