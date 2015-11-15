@@ -1,15 +1,14 @@
 * Chord
 
 A lightweight Clojure/ClojureScript library designed to bridge the gap
-between the triad of CLJ/CLJS, web-sockets and core.async. In
-addition, Chord also now supports AJAX requests.
+between the triad of CLJ/CLJS, web-sockets and core.async.
 
 ** Usage
 
 Include the following in your =project.clj=:
 
 #+BEGIN_SRC clojure
-  [jarohen/chord "0.6.0"]
+  [jarohen/chord "0.7.0"]
 #+END_SRC
 
 Chord now supports EDN, JSON, Transit and Fressian out of the box -
