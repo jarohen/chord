@@ -113,6 +113,7 @@ Chord's =with-channel= is used as follows:
 
 #+BEGIN_SRC clojure
   (:require [chord.http-kit :refer [with-channel]]
+            [org.httpkit.server :refer [run-server]]
             [clojure.core.async :refer [<! >! put! close! go]])
 
   (defn your-handler [req]
@@ -146,6 +147,7 @@ put a =:ws-channel= key in the request map:
 
 #+BEGIN_SRC clojure
   (require '[chord.http-kit :refer [wrap-websocket-handler]]
+           '[org.httpkit.server :refer [run-server]]
            '[clojure.core.async :as a])
 
   (defn your-handler [{:keys [ws-channel] :as req}]
@@ -155,16 +157,16 @@ put a =:ws-channel= key in the request map:
         (>! ws-channel "Hello client from server!")
         (close! ws-channel))))
 
-  (start-server (-> #'your-handler wrap-websocket-handler) {:port 3000})
+  (run-server (-> #'your-handler wrap-websocket-handler) {:port 3000})
 #+END_SRC
 
 You can pass custom channels to =wrap-websocket-handler= as a second
 (optional) parameter:
 
 #+BEGIN_SRC clojure
-  (start-server (-> #'your-handler
-                    (wrap-websocket-handler {:read-ch ...}))
-                {:port 3000})
+  (run-server (-> #'your-handler
+                (wrap-websocket-handler {:read-ch ...}))
+              {:port 3000})
 #+END_SRC
 
 ** Bug reports/pull requests/comments/suggestions etc?
