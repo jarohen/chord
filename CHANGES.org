@@ -1,4 +1,8 @@
 * Changes
+** 0.8.x
+*** 0.8.0
+Breaking changes:
+- Removing unused dependency on =com.cemerick/url= - thanks [[https://github.com/alexhill][Alex]]!
 ** 0.7.x
 *** 0.7.0
 Breaking changes:
