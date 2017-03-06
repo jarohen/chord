@@ -1,0 +1,8 @@
+* NodeJS example
+
+Connects to echo.websocket.org, sends a message and retrieves the response.
+
+** Usage
+
+lein do npm install, cljsbuild once
+node example_node.js
