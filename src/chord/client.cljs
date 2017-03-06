@@ -9,6 +9,23 @@
     {:reason (.-reason ev)
      :code (.-code ev)}))
 
+(defn- create-ws [url opts]
+  (cond
+    ;; Detect if the "ws" node library is available
+    ;; Note that just checking that cljs.core/*target* == nodejs works for nodejs
+    ;; but not for node-webkit (at least)
+    ;; This should work in all cases
+    (and (exists? js/require)
+         (try (js/require "ws")
+              (catch :default e
+                false)))
+    (let [ws (js/require "ws")]
+      (if opts
+        (new ws url (clj->js opts))
+        (new ws url)))
+
+    :else (js/WebSocket. url)))
+
 (defn ws-ch
   "Creates websockets connection and returns a 2-sided channel when the websocket is opened.
    Arguments:
@@ -18,6 +35,8 @@
       :write-ch      - (optional) (possibly buffered) channel to use for writing to the websocket
       :format        - (optional) data format to use on the channel, (at the moment)
                                   either :edn (default), :json, :json-kw or :str.
+      :ws-opts       - (optional) Other options to be passed to the websocket constructor (NodeJS only)
+                                  see https://github.com/websockets/ws/blob/master/doc/ws.md#new-websocketaddress-protocols-options
 
    Usage:
     (:require [cljs.core.async :as a])
@@ -30,9 +49,9 @@
     (a/<! (ws-ch \"ws://127.0.0.1:6437\" {:read-ch (a/chan (a/sliding-buffer 10))
                                           :write-ch (a/chan (a/dropping-buffer 10))}))"
 
-  [ws-url & [{:keys [read-ch write-ch format] :as opts}]]
+  [ws-url & [{:keys [read-ch write-ch format ws-opts] :as opts}]]
 
-  (let [web-socket (js/WebSocket. ws-url)
+  (let [web-socket (create-ws ws-url ws-opts)
         {:keys [read-ch write-ch]} (-> {:read-ch (or read-ch (chan))
                                         :write-ch (or write-ch (chan))}
                                        (wrap-format opts))
