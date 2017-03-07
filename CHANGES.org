@@ -1,5 +1,7 @@
 * Changes
 ** 0.8.x
+*** 0.8.1
+Add support for NodeJS websocket clients - thanks to [[https://github.com/ageneau][Sylvain Ageneau]]!
 *** 0.8.0
 Breaking changes:
 - Removing unused dependency on =com.cemerick/url= - thanks [[https://github.com/alexhill][Alex]]!
