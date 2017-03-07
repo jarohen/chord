@@ -8,7 +8,7 @@ between the triad of CLJ/CLJS, web-sockets and core.async.
 Include the following in your =project.clj=:
 
 #+BEGIN_SRC clojure
-  [jarohen/chord "0.8.0"]
+  [jarohen/chord "0.8.1"]
 #+END_SRC
 
 Chord now supports EDN, JSON, Transit and Fressian out of the box -

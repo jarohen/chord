@@ -10,7 +10,7 @@
                  [com.cognitect/transit-cljs "0.8.239"]
 
                  [com.cemerick/piggieback "0.2.1"]
-                 [jarohen/chord "0.8.0-SYLVAIN"]]
+                 [jarohen/chord "0.8.1"]]
 
   :plugins [[lein-cljsbuild "1.1.5"]
             [lein-npm "0.6.2"]]
