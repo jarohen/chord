@@ -1,9 +1,8 @@
 (ns example-node.core
-  (:require-macros
-      [cljs.core.async.macros :refer (go go-loop)])
   (:require [cljs.nodejs :as nodejs]
             [chord.client :refer [ws-ch]]
-            [cljs.core.async :refer [take! put! chan <! >! timeout close!]]))
+            [cljs.core.async :refer [chan <! >! close!]])
+  (:require-macros [cljs.core.async.macros :refer [go go-loop]]))
 
 (nodejs/enable-util-print!)
 
