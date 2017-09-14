@@ -1,27 +1,7 @@
 (ns chord.http-kit
   (:require [clojure.core.async :as a :refer [chan <! >! close! go-loop]]
             [org.httpkit.server :as http]
-            [chord.channels :refer [read-from-ws! write-to-ws! bidi-ch]]
-            [chord.format :as cf]))
-
-(defn- on-close [ws read-ch write-ch]
-  (http/on-close ws
-                 (fn [_]
-                   ;; TODO support status?
-                   (close! read-ch)
-                   (close! write-ch))))
-
-(defn core-async-ch [httpkit-ch {:keys [read-ch write-ch format] :as opts}]
-  (let [{:keys [read-ch write-ch]} (-> {:read-ch (or read-ch (chan))
-                                        :write-ch (or write-ch (chan))}
-                                       (cf/wrap-format (dissoc opts :read-ch :write-ch)))]
-
-    (read-from-ws! httpkit-ch read-ch)
-    (write-to-ws! httpkit-ch write-ch)
-    (on-close httpkit-ch read-ch write-ch)
-
-    (bidi-ch read-ch write-ch {:on-close #(when (http/open? httpkit-ch)
-                                            (http/close httpkit-ch))})))
+            [chord.channels :refer [wrap-websocket]]))
 
 (defmacro with-channel
   "Extracts the websocket from the request and binds it to 'ch-name' in the body
@@ -52,18 +32,20 @@
         (when-let [msg (<! the-ws)]
           (println msg)
           (recur))))"
-  
+
   [req ch-name & [opts & body]]
-  
+
   (let [opts? (and (or (map? opts)
                        (:opts (meta opts)))
                    (seq body))
         body (cond->> body
                (not opts?) (cons opts))
         opts (when opts? opts)]
-    
+
     `(http/with-channel ~req httpkit-ch#
-       (let [~ch-name (core-async-ch httpkit-ch# ~opts)]
+       (let [~ch-name (wrap-websocket httpkit-ch# ~opts
+                                      #(when (http/open? httpkit-ch#)
+                                         (http/close httpkit-ch#)))]
          ~@body))))
 
 (defn wrap-websocket-handler
@@ -74,7 +56,7 @@
     handler - (required) Ring-compatible handler
     opts    - (optional) Options for the WebSocket channel - same options as for `with-channel`"
   [handler & [opts]]
-  
+
   (fn [req]
     (if (:websocket? req)
       (with-channel req ws-conn
