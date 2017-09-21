@@ -97,7 +97,7 @@ As of 0.2.1, you can configure the buffering of the channel by
 By default, Chord uses unbuffered channels, like core.async itself.
 
 *** NodeJS
-		To use Chord with node, you need to have the `ws` library installed in your
+		To use Chord with node, you need to have the =ws= library installed in your
 		project. From your project root, run:
 
 		#+BEGIN_SRC sh
@@ -105,15 +105,15 @@ npm install --save ws
 		#+END_SRC
 
 		Alternately you can use the [[https://github.com/RyanMcG/lein-npm][lein npm]] plugin to add npm dependencies to your
-		`project.clj` file.
+		=project.clj= file.
 
 **** Client
-		 Chord's client API is identical in the browser and on node. So see [[*ClojureScript][the
-		 clojurescript section]].
+		 Chord's client API is identical in the browser and on node. See the
+		 clojurescript section.
 
 **** Server
 		 Again, there's only one function to worry about. In this case it's
-		 `chord.node/ws-server`. To start a websocket server, you need to define a
+		 =chord.node/ws-server=. To start a websocket server, you need to define a
 		 handler that will receive channels corresponding to new websockets, along
 		 with the HTTP request that opened the socket.
 
@@ -159,9 +159,9 @@ npm install --save ws
 		 the underlying server passed into ws-server. So if you want wss (secure
 		 websockets) use an https server.
 
-		 The `ws` library that chord piggiebacks off of on node is a powerful,
+		 The =ws= library that chord piggiebacks off of on node is a powerful,
 		 feature rich websocket implementation. See the [[https://github.com/websockets/ws/blob/master/doc/ws.md][API docs]] for details. All of
-		 that power is available via the `ws-opts` parameter to `ws-server`.
+		 that power is available via the =ws-opts= parameter to =ws-server=.
 *** Clojure
 
 *Chord* wraps the websocket support provided by [[http://http-kit.org/index.html][http-kit]], a fast
