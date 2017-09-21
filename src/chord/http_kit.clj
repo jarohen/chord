@@ -43,9 +43,7 @@
         opts (when opts? opts)]
 
     `(http/with-channel ~req httpkit-ch#
-       (let [~ch-name (wrap-websocket httpkit-ch# ~opts
-                                      #(when (http/open? httpkit-ch#)
-                                         (http/close httpkit-ch#)))]
+       (let [~ch-name (wrap-websocket httpkit-ch# ~opts)]
          ~@body))))
 
 (defn wrap-websocket-handler

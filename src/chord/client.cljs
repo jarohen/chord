@@ -67,7 +67,7 @@
     (set! (.-onclose web-socket)
           #(put! close-ch %))
 
-    (let [ws-chan (bidi-ch read-ch write-ch {:on-close #(.close web-socket)})
+    (let [ws-chan (bidi-ch read-ch write-ch #(.close web-socket))
           initial-ch (a/chan)]
 
       (go-loop [opened? false]
