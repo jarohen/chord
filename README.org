@@ -8,7 +8,7 @@ between the triad of CLJ/CLJS, web-sockets and core.async.
 Include the following in your =project.clj=:
 
 #+BEGIN_SRC clojure
-	[jarohen/chord "0.8.1"]
+  [jarohen/chord "0.8.1"]
 #+END_SRC
 
 Chord now supports EDN, JSON, Transit and Fressian out of the box -
@@ -37,37 +37,37 @@ returns a two-way channel that you can use to communicate with the
 web-socket server:
 
 #+BEGIN_SRC clojure
-	(:require [chord.client :refer [ws-ch]]
-						[cljs.core.async :refer [<! >! put! close!]])
-	(:require-macros [cljs.core.async.macros :refer [go]])
+  (:require [chord.client :refer [ws-ch]]
+            [cljs.core.async :refer [<! >! put! close!]])
+  (:require-macros [cljs.core.async.macros :refer [go]])
 
-	(go
-		(let [{:keys [ws-channel error]} (<! (ws-ch "ws://localhost:3000/ws"))]
-			(if-not error
-				(>! ws-channel "Hello server from client!")
-				(js/console.log "Error:" (pr-str error)))))
+  (go
+    (let [{:keys [ws-channel error]} (<! (ws-ch "ws://localhost:3000/ws"))]
+      (if-not error
+        (>! ws-channel "Hello server from client!")
+        (js/console.log "Error:" (pr-str error)))))
 #+END_SRC
 
 Messages that come from the server are received as a map with a
 =:message= key:
 
 #+BEGIN_SRC clojure
-	(go
-		(let [{:keys [ws-channel]} (<! (ws-ch "ws://localhost:3000/ws"))
-					{:keys [message]} (<! ws-channel)]
-			(js/console.log "Got message from server:" (pr-str message))))
+  (go
+    (let [{:keys [ws-channel]} (<! (ws-ch "ws://localhost:3000/ws"))
+          {:keys [message]} (<! ws-channel)]
+      (js/console.log "Got message from server:" (pr-str message))))
 #+END_SRC
 
 Errors in the web-socket channel (i.e. if the server goes away) are
 returned as a map with an =:error= key:
 
 #+BEGIN_SRC clojure
-	(go
-		(let [{:keys [ws-channel]} (<! (ws-ch "ws://localhost:3000/ws"))
-					{:keys [message error]} (<! ws-channel)]
-			(if error
-				(js/console.log "Uh oh:" error)
-				(js/console.log "Hooray! Message:" (pr-str message)))))
+  (go
+    (let [{:keys [ws-channel]} (<! (ws-ch "ws://localhost:3000/ws"))
+          {:keys [message error]} (<! ws-channel)]
+      (if error
+        (js/console.log "Uh oh:" error)
+        (js/console.log "Hooray! Message:" (pr-str message)))))
 #+END_SRC
 
 As of 0.3.0, you can pass a =:format= option, to pass messages over
@@ -79,69 +79,69 @@ defaulting to =:edn=.
 in addition to the usual Chord namespaces)
 
 #+BEGIN_SRC clojure
-	(:require [cljs.core.async :as a])
-	(ws-ch "ws://localhost:3000/ws"
-				 {:format :json-kw})
+  (:require [cljs.core.async :as a])
+  (ws-ch "ws://localhost:3000/ws"
+         {:format :json-kw})
 #+END_SRC
 
 As of 0.2.1, you can configure the buffering of the channel by
 (optionally) passing custom read/write channels, as follows:
 
 #+BEGIN_SRC clojure
-	(:require [cljs.core.async :as a])
-	(ws-ch "ws://localhost:3000/ws"
-				 {:read-ch (a/chan (a/sliding-buffer 10))
-					:write-ch (a/chan 5)})
+  (:require [cljs.core.async :as a])
+  (ws-ch "ws://localhost:3000/ws"
+         {:read-ch (a/chan (a/sliding-buffer 10))
+          :write-ch (a/chan 5)})
 #+END_SRC
 
 By default, Chord uses unbuffered channels, like core.async itself.
 
 *** NodeJS
-		To use Chord with node, you need to have the =ws= library installed in your
-		project. From your project root, run:
+    To use Chord with node, you need to have the =ws= library installed in your
+    project. From your project root, run:
 
-		#+BEGIN_SRC sh
+    #+BEGIN_SRC sh
 npm install --save ws
-		#+END_SRC
+    #+END_SRC
 
-		Alternately you can use the [[https://github.com/RyanMcG/lein-npm][lein npm]] plugin to add npm dependencies to your
-		=project.clj= file.
+    Alternately you can use the [[https://github.com/RyanMcG/lein-npm][lein npm]] plugin to add npm dependencies to your
+    =project.clj= file.
 
 **** Client
-		 Chord's client API is identical in the browser and on node. See the
-		 clojurescript section.
+     Chord's client API is identical in the browser and on node. See the
+     clojurescript section.
 
 **** Server
-		 Again, there's only one function to worry about. In this case it's
-		 =chord.node/ws-server=. To start a websocket server, you need to define a
-		 handler that will receive channels corresponding to new websockets, along
-		 with the HTTP request that opened the socket.
+     Again, there's only one function to worry about. In this case it's
+     =chord.node/ws-server=. To start a websocket server, you need to define a
+     handler that will receive channels corresponding to new websockets, along
+     with the HTTP request that opened the socket.
 
-		 #+BEGIN_SRC clojure
+     #+BEGIN_SRC clojure
 (ns my-server.core
-	(:require [chord.node :refer [ws-server]]))
+  (:require [chord.node :refer [ws-server]]))
 
 (defn my-handler [ws-ch request]
-	(if (authorized? request)
-		(async/put! ws-ch "Welcome!")
-		(do
-			(async/put! ws-ch "Denied!")
-			(async/close! ws-ch)))
-	(async/go
-		(println (async/<! ws-ch))
-		'...))
+  (if (authorized? request)
+    (async/put! ws-ch "Welcome!")
+    (do
+      (async/put! ws-ch "Denied!")
+      (async/close! ws-ch)))
+  (async/go
+    (println (async/<! ws-ch))
+    '...))
 
 (ws-server my-handler {:format :edn} {:port 8080})
-		 #+END_SRC
+     #+END_SRC
 
-		 We also try to play nice with the node ecosystem, so you can integrate
-		 chord's websocket server into frameworks cleanly. Here's an example with
-		 express:
+     We also try to play nice with the node ecosystem, so you can integrate
+     chord's websocket server into frameworks cleanly. Here's an example with
+     express:
 
-		 #+BEGIN_SRC clojure
+     #+BEGIN_SRC clojure
 (ns my-server.core
-	(:require [chord.node :refer [ws-server]]
-						[cljs.nodejs :as nodejs]))
+  (:require [chord.node :refer [ws-server]]
+            [cljs.nodejs :as nodejs]))
 
 (def express (nodejs/require "express"))
 (def https (nodejs/require "https"))
@@ -153,15 +153,15 @@ npm install --save ws
 (def server (.createServer https app))
 
 (def websocket-server (ws-server my-handler {:format :json} server))
-		 #+END_SRC
+     #+END_SRC
 
-		 Node that the transport mechanism of the websocket server is determined by
-		 the underlying server passed into ws-server. So if you want wss (secure
-		 websockets) use an https server.
+     Node that the transport mechanism of the websocket server is determined by
+     the underlying server passed into ws-server. So if you want wss (secure
+     websockets) use an https server.
 
-		 The =ws= library that chord piggiebacks off of on node is a powerful,
-		 feature rich websocket implementation. See the [[https://github.com/websockets/ws/blob/master/doc/ws.md][API docs]] for details. All of
-		 that power is available via the =ws-opts= parameter to =ws-server=.
+     The =ws= library that chord piggiebacks off of on node is a powerful,
+     feature rich websocket implementation. See the [[https://github.com/websockets/ws/blob/master/doc/ws.md][API docs]] for details. All of
+     that power is available via the =ws-opts= parameter to =ws-server=.
 *** Clojure
 
 *Chord* wraps the websocket support provided by [[http://http-kit.org/index.html][http-kit]], a fast
@@ -178,61 +178,61 @@ use core.async's primitives.
 Chord's =with-channel= is used as follows:
 
 #+BEGIN_SRC clojure
-	(:require [chord.http-kit :refer [with-channel]]
-						[org.httpkit.server :refer [run-server]]
-						[clojure.core.async :refer [<! >! put! close! go]])
+  (:require [chord.http-kit :refer [with-channel]]
+            [org.httpkit.server :refer [run-server]]
+            [clojure.core.async :refer [<! >! put! close! go]])
 
-	(defn your-handler [req]
-		(with-channel req ws-ch
-			(go
-				(let [{:keys [message]} (<! ws-ch)]
-					(prn "Message received:" message)
-					(>! ws-ch "Hello client from server!")
-					(close! ws-ch)))))
+  (defn your-handler [req]
+    (with-channel req ws-ch
+      (go
+        (let [{:keys [message]} (<! ws-ch)]
+          (prn "Message received:" message)
+          (>! ws-ch "Hello client from server!")
+          (close! ws-ch)))))
 #+END_SRC
 
 This can take a =:format= option, and custom buffered read/write
 channels as well:
 
 #+BEGIN_SRC clojure
-	(require '[clojure.core.async :as a])
+  (require '[clojure.core.async :as a])
 
-	(defn your-handler [req]
-		(with-channel req ws-ch
-			{:read-ch (a/chan (a/dropping-buffer 10))
-					 :format :str} ; again, :edn is default
-			(go
-				(let [{:keys [message]} (<! ws-ch)]
-					(prn "Message received:" message)
-					(>! ws-ch "Hello client from server!")
-					(close! ws-ch)))))
+  (defn your-handler [req]
+    (with-channel req ws-ch
+      {:read-ch (a/chan (a/dropping-buffer 10))
+           :format :str} ; again, :edn is default
+      (go
+        (let [{:keys [message]} (<! ws-ch)]
+          (prn "Message received:" message)
+          (>! ws-ch "Hello client from server!")
+          (close! ws-ch)))))
 #+END_SRC
 
 You can also use the =wrap-websocket-handler= middleware, which will
 put a =:ws-channel= key in the request map:
 
 #+BEGIN_SRC clojure
-	(require '[chord.http-kit :refer [wrap-websocket-handler]]
-					 '[org.httpkit.server :refer [run-server]]
-					 '[clojure.core.async :as a])
+  (require '[chord.http-kit :refer [wrap-websocket-handler]]
+           '[org.httpkit.server :refer [run-server]]
+           '[clojure.core.async :as a])
 
-	(defn your-handler [{:keys [ws-channel] :as req}]
-		(go
-			(let [{:keys [message]} (<! ws-channel)]
-				(println "Message received:" message)
-				(>! ws-channel "Hello client from server!")
-				(close! ws-channel))))
+  (defn your-handler [{:keys [ws-channel] :as req}]
+    (go
+      (let [{:keys [message]} (<! ws-channel)]
+        (println "Message received:" message)
+        (>! ws-channel "Hello client from server!")
+        (close! ws-channel))))
 
-	(run-server (-> #'your-handler wrap-websocket-handler) {:port 3000})
+  (run-server (-> #'your-handler wrap-websocket-handler) {:port 3000})
 #+END_SRC
 
 You can pass custom channels to =wrap-websocket-handler= as a second
 (optional) parameter:
 
 #+BEGIN_SRC clojure
-	(run-server (-> #'your-handler
-								(wrap-websocket-handler {:read-ch ...}))
-							{:port 3000})
+  (run-server (-> #'your-handler
+                (wrap-websocket-handler {:read-ch ...}))
+              {:port 3000})
 #+END_SRC
 
 ** Bug reports/pull requests/comments/suggestions etc?
