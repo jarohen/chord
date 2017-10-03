@@ -101,7 +101,7 @@ By default, Chord uses unbuffered channels, like core.async itself.
     project. From your project root, run:
 
     #+BEGIN_SRC sh
-npm install --save ws
+      npm install --save ws
     #+END_SRC
 
     Alternately you can use the [[https://github.com/RyanMcG/lein-npm][lein npm]] plugin to add npm dependencies to your
@@ -118,20 +118,20 @@ npm install --save ws
      with the HTTP request that opened the socket.
 
      #+BEGIN_SRC clojure
-(ns my-server.core
-  (:require [chord.node :refer [ws-server]]))
+       (ns my-server.core
+         (:require [chord.node :refer [ws-server]]))
 
-(defn my-handler [ws-ch request]
-  (if (authorized? request)
-    (async/put! ws-ch "Welcome!")
-    (do
-      (async/put! ws-ch "Denied!")
-      (async/close! ws-ch)))
-  (async/go
-    (println (async/<! ws-ch))
-    '...))
+       (defn my-handler [ws-ch request]
+         (if (authorized? request)
+           (async/put! ws-ch "Welcome!")
+           (do
+             (async/put! ws-ch "Denied!")
+             (async/close! ws-ch)))
+         (async/go
+           (println (async/<! ws-ch))
+           '...))
 
-(ws-server my-handler {:format :edn} {:port 8080})
+       (ws-server my-handler {:format :edn} {:port 8080})
      #+END_SRC
 
      We also try to play nice with the node ecosystem, so you can integrate
@@ -139,20 +139,20 @@ npm install --save ws
      express:
 
      #+BEGIN_SRC clojure
-(ns my-server.core
-  (:require [chord.node :refer [ws-server]]
-            [cljs.nodejs :as nodejs]))
+       (ns my-server.core
+         (:require [chord.node :refer [ws-server]]
+                   [cljs.nodejs :as nodejs]))
 
-(def express (nodejs/require "express"))
-(def https (nodejs/require "https"))
-(def app (express))
+       (def express (nodejs/require "express"))
+       (def https (nodejs/require "https"))
+       (def app (express))
 
-;; ...
-;; Set up your routes and server logic however you please
+       ;; ...
+       ;; Set up your routes and server logic however you please
 
-(def server (.createServer https app))
+       (def server (.createServer https app))
 
-(def websocket-server (ws-server my-handler {:format :json} server))
+       (def websocket-server (ws-server my-handler {:format :json} server))
      #+END_SRC
 
      Node that the transport mechanism of the websocket server is determined by
