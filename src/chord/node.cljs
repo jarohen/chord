@@ -3,7 +3,7 @@
             [chord.channels :as channels]
             [chord.format :as format]))
 
-(defn ws-server [handler {:keys [read-ch write-ch :as chord-opts]} ws-opts]
+(defn ws-server [handler {:keys [read-ch write-ch] :as chord-opts} ws-opts]
   (if-let [ws (nodejs/require "ws")]
     (let [server (ws.Server. (clj->js ws-opts))]
       (.on server "connection"
