@@ -152,7 +152,9 @@ By default, Chord uses unbuffered channels, like core.async itself.
 
        (def server (.createServer https app))
 
-       (def websocket-server (ws-server my-handler {:format :json} server))
+       (def websocket-server
+         (ws-server my-handler {:format :json,
+                                :ws-opts server}))
      #+END_SRC
 
      Node that the transport mechanism of the websocket server is determined by
