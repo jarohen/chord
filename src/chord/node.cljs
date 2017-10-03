@@ -3,9 +3,9 @@
             [chord.channels :as channels]
             [chord.format :as format]))
 
-(defn ws-server [handler {:keys [read-ch write-ch ws-opts] :as opts}]
+(defn ws-server [handler {:keys [read-ch write-ch ws-lib-opts] :as opts}]
   (if-let [ws (nodejs/require "ws")]
-    (let [server (ws.Server. (clj->js ws-opts))]
+    (let [server (ws.Server. (clj->js ws-lib-opts))]
       (.on server "connection"
            (fn [socket request]
              (let [ws-ch (channels/wrap-websocket socket opts)]

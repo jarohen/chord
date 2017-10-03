@@ -154,7 +154,7 @@ By default, Chord uses unbuffered channels, like core.async itself.
 
        (def websocket-server
          (ws-server my-handler {:format :json,
-                                :ws-opts server}))
+                                :ws-lib-opts server}))
      #+END_SRC
 
      Node that the transport mechanism of the websocket server is determined by
@@ -163,7 +163,7 @@ By default, Chord uses unbuffered channels, like core.async itself.
 
      The =ws= library that chord piggiebacks off of on node is a powerful,
      feature rich websocket implementation. See the [[https://github.com/websockets/ws/blob/master/doc/ws.md][API docs]] for details. All of
-     that power is available via the =ws-opts= parameter to =ws-server=.
+     that power is available via the =ws-lib-opts= parameter to =ws-server=.
 *** Clojure
 
 *Chord* wraps the websocket support provided by [[http://http-kit.org/index.html][http-kit]], a fast
