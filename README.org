@@ -98,11 +98,11 @@ By default, Chord uses unbuffered channels, like core.async itself.
 
 *** Clojure
 
-*Chord* wraps the websocket support provided by [[http://http-kit.org/index.html][http-kit]], a fast
+*Chord* wraps the websocket support provided by [[http://http-kit.github.io][http-kit]], a fast
 Clojure web server compatible with Ring.
 
 *N.B. Currently, Ring's standard Jetty adapter ~does not~ support
-Websockets.*  [[http://http-kit.org/index.html][http-kit]] is a Ring-compatible alternative.
+Websockets.*  [[http://http-kit.github.io][http-kit]] is a Ring-compatible alternative.
 
 Again, there's only one entry point to remember here: a wrapper around
 http-kit's =with-channel= macro. The only difference is that, rather
